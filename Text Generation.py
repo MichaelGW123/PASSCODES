@@ -61,6 +61,8 @@ def split_input_target(sequence):
     return input_text, target_text
 
 
+dataset = sequences.map(split_input_target)
+
 # Batch size
 BATCH_SIZE = 1024
 
@@ -106,9 +108,11 @@ class MyModel(tf.keras.Model):
 
 
 model = MyModel(
+    # Be sure the vocabulary size matches the `StringLookup` layers.
     vocab_size=len(ids_from_chars.get_vocabulary()),
     embedding_dim=embedding_dim,
     rnn_units=rnn_units)
+
 
 for input_example_batch, target_example_batch in dataset.take(1):
     example_batch_predictions = model(input_example_batch)
