@@ -1,7 +1,7 @@
 from pathlib import Path
-
-path = Path(__file__).parent / 'PREDwords (NC).txt'
-path2 = Path(__file__).parent / 'PREDwords (Clear).txt'
+specificFile = 'words70to80'
+path = Path(__file__).parent / f'PRED{specificFile}-1000.txt'
+path2 = Path(__file__).parent / f'PRED{specificFile}-1000(Clear).txt'
 
 with open(path) as infile, open(path2, 'w') as outfile:
     for line in infile:

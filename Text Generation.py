@@ -210,11 +210,11 @@ else:
 
   next_char = tf.constant(startingWords)
   result = [next_char]
-
-  f = open("./Generated Files/PREDwords (NC).txt", "a", encoding='utf-8')
   avg_length = length/line_count
   avg_length_int = int(avg_length)
   saturation = 10
+  outputPath = f"./Generated Files/PRED{specificFile}-{saturation*100}.txt"
+  f = open(outputPath, "a", encoding='utf-8')
   number_of_guesses = int(avg_length*line_count*saturation/number_of_lines)
   partialGuess = int(number_of_guesses/100)
   print(number_of_guesses)
