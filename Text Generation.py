@@ -10,10 +10,15 @@ import os
 import time
 
 # Importing the training set
-specificFile = 'words70to80'
+specificFile = 'words55to60'
+# Flag for if training or generating
 training = True
+# Flags for if code will be running on its own to save run data and turn off computer
 away = True
 turnOff = True
+# Flag for saving a specific weight from the training checkpoints if model deteriorates
+saveNewWeight = False
+EPOCHS = 8
 
 start = time.time()
 fileName = 'C://Users//Michael JITN//Documents//School//Masters Code//DeepLearningEntropy//'+specificFile+'.txt'
@@ -108,7 +113,6 @@ class MyModel(tf.keras.Model):
 
 
 model = MyModel(
-    # Be sure the vocabulary size matches the `StringLookup` layers.
     vocab_size=len(ids_from_chars.get_vocabulary()),
     embedding_dim=embedding_dim,
     rnn_units=rnn_units)
@@ -137,9 +141,8 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_prefix,
     save_weights_only=True)
 
-EPOCHS = 16
 
-checkpointPath = './modelweights/' + specificFile + '/model(1024)(16)-' + specificFile
+checkpointPath = f'./modelweights/{specificFile}/model(1024)({EPOCHS})-{specificFile}'
 
 if (training):
   history = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback])
@@ -153,7 +156,13 @@ if (training):
     record.write(line)
     record.close()
 else:
+  if (saveNewWeight):
+    model.load_weights(f'./training_checkpoints/ckpt_{EPOCHS}')
+    model.save_weights(checkpointPath)
+    exit()
+  
   model.load_weights(checkpointPath)
+
 
   # Step 4 - Generating Text
   print("Generating Text Begun - ")
