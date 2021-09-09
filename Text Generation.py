@@ -12,19 +12,20 @@ import time
 # Importing the training set
 specificFile = 'words55to60'
 # Flag for if training or generating
-training = True
+training = False
 # Flags for if code will be running on its own to save run data and turn off computer
 away = True
 turnOff = True
 # Flag for saving a specific weight from the training checkpoints if model deteriorates
-saveNewWeight = False
-EPOCHS = 8
+saveNewWeight = True
+EPOCHS = 10
+# Variable for array of starter words (Increasing reduces time but increases computational load)
+number_of_lines = 1000
 
 start = time.time()
 fileName = 'C://Users//Michael JITN//Documents//School//Masters Code//DeepLearningEntropy//'+specificFile+'.txt'
 fileGrab = open(fileName, 'r')
 startingWords = []
-number_of_lines = 1000
 for i in range(number_of_lines):
     line = fileGrab.readline()
     startingWords.append(line.strip())
