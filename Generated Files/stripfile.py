@@ -1,5 +1,5 @@
 from pathlib import Path
-specificFile = 'words35to40'
+specificFile = 'words45to50'
 path = Path(__file__).parent / f'PRED{specificFile}-1000.txt'
 path2 = Path(__file__).parent / f'PRED{specificFile}-1000(Clear).txt'
 
