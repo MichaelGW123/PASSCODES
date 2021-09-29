@@ -10,34 +10,34 @@ import os
 import time
 
 # Importing the training set
-specificFile = 'words70to80'
+specific_file = 'words70to80'
 # Flag for if training or generating
 training = False
 # Flags for if code will be running on its own to save run data and turn off computer
 away = True
-turnOff = True
+turn_off = True
 # Flag for saving a specific weight from the training checkpoints if model deteriorates
-saveNewWeight = False
+save_new_weight = False
 EPOCHS = 16
 # Variable for array of starter words (Increasing reduces time but increases computational load)
 number_of_lines = 2000
 
 start = time.time()
-fileName = 'C://Users//Michael JITN//Documents//School//Masters Code//DeepLearningEntropy//'+specificFile+'.txt'
-fileGrab = open(fileName, 'r')
-startingWords = []
+file_name = 'C://Users//Michael JITN//Documents//School//Masters Code//DeepLearningEntropy//'+specific_file+'.txt'
+file_grab_start_words = open(file_name, 'r')
+starting_words = []
 for i in range(number_of_lines):
-    line = fileGrab.readline()
-    startingWords.append(line.strip())
-nonempty_lines = [line.strip("\n") for line in fileGrab if line != "\n"]
+    line = file_grab_start_words.readline()
+    starting_words.append(line.strip())
+nonempty_lines = [line.strip("\n") for line in file_grab_start_words if line != "\n"]
 line_count = len(nonempty_lines)+number_of_lines
 print(f'Number of lines: {line_count} lines')
-fileGrab.close()
-text = open(fileName, 'rb').read().decode(encoding='utf-8')
+file_grab_start_words.close()
+text = open(file_name, 'rb').read().decode(encoding='utf-8')
 length = len(text)
 print(f'Length of text: {length} characters')
 end = time.time()
-importingData = end - start
+importing_data_time = end - start
 # The unique characters in the file
 vocab = sorted(set(text))
 print(f'{len(vocab)} unique characters')
@@ -80,7 +80,7 @@ BUFFER_SIZE = 10000
 
 dataset = (dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True).prefetch(tf.data.experimental.AUTOTUNE))
 end = time.time()
-vectorizingData = end - start
+vectorizing_data_time = end - start
 # Part 2 Creating the RNN
 # Length of the vocabulary in chars
 vocab_size = len(vocab)
@@ -143,26 +143,26 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     save_weights_only=True)
 
 
-checkpointPath = f'./modelweights/{specificFile}/model(1024)({EPOCHS})-{specificFile}'
+checkpoint_path = f'./modelweights/{specific_file}/model(1024)({EPOCHS})-{specific_file}'
 
 if (training):
   history = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback])
-  model.save_weights(checkpointPath)
+  model.save_weights(checkpoint_path)
 
   if (away):
     end = time.time()
     total = end - start
-    line = f"File: {specificFile} \nImporting Data Time: {importingData} \nVectorizing Data Time: {vectorizingData} \nTraining Run Time: {total} seconds\n\n"
+    line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nTraining Run Time: {total} seconds\n\n"
     record = open('./runtime.txt', "a", encoding='utf-8')
     record.write(line)
     record.close()
 else:
-  if (saveNewWeight):
+  if (save_new_weight):
     model.load_weights(f'./training_checkpoints/ckpt_{EPOCHS}')
-    model.save_weights(checkpointPath)
+    model.save_weights(checkpoint_path)
     exit()
   
-  model.load_weights(checkpointPath)
+  model.load_weights(checkpoint_path)
 
 
   # Step 4 - Generating Text
@@ -218,13 +218,13 @@ else:
   start = time.time()
   states = None
 
-  next_char = tf.constant(startingWords)
+  next_char = tf.constant(starting_words)
   result = [next_char]
   avg_length = length/line_count
   avg_length_int = int(avg_length)
   saturation = 10
-  outputPath = f"./Generated Files/PRED{specificFile}-{saturation*100}.txt"
-  f = open(outputPath, "a", encoding='utf-8')
+  output_path = f"./Generated Files/PRED{specific_file}-{saturation*100}.txt"
+  f = open(output_path, "a", encoding='utf-8')
   number_of_guesses = int(avg_length*line_count*saturation/number_of_lines)
   partialGuess = int(number_of_guesses/100)
   print(number_of_guesses)
@@ -242,12 +242,12 @@ else:
   if (away):
     end = time.time()
     total = end - start
-    line = f"File: {specificFile} \nImporting Data Time: {importingData} \nVectorizing Data Time: {vectorizingData} \nGenerating Data: {number_of_guesses} \nGenerating Time: {total} seconds\n\n"
+    line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nGenerating Data: {number_of_guesses} \nGenerating Time: {total} seconds\n\n"
     record = open('./runtime.txt', "a", encoding='utf-8')
     record.write(line)
     record.close()
   else:
     print('\nRun time:', end - start)
   
-if (turnOff):
+if (turn_off):
       os.system("shutdown /s /t 1")
