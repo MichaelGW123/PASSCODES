@@ -3,16 +3,15 @@
 # Importing Libraries
 
 from matplotlib import pyplot as plt
-import math
 import numpy as np
 from pathlib import Path
 import time
 
 tester_flag = False
-show_flag = True
+show_flag = False
 
 same_file_flag = True
-target_file_name = 'wordslessthan20'
+target_file_name = 'words45to50'
 generated_lower_file_name = 'Generated'
 generated_same_file_name = f'PRED{target_file_name}-1000'
 
@@ -66,13 +65,15 @@ if tester_flag:
 x = generated_list_length_array
 y = array_percentages
 plt.xlabel("Number of Generated Guesses")
-plt.ylabel("Percent Matching Target File")
+plt.ylabel("Percent (%) Matching Target File")
 if same_file_flag:
     plt.title(f'Generated Matching Effectiveness - {generating_model}\nTarget: {target_file_name} (Same Set Used to Train)')
 else:
     plt.title(f'Generated Matching Effectiveness - {generating_model}\nTarget: {target_file_name}')
 plt.xlim([0,generated_list_length_array[generated_length-1]])
 plt.ylim([0,100])
+plt.yticks(np.arange(0, 100.1, 5))
+plt.xticks(np.arange(0, generated_length+1, generated_length//10))
 plt.plot(x,y)
 if show_flag:
     plt.show()
