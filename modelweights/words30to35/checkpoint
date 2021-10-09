@@ -1,2 +1,2 @@
-model_checkpoint_path: "model(1024)(16)-words30to35"
-all_model_checkpoint_paths: "model(1024)(16)-words30to35"
+model_checkpoint_path: "model(1024)(8)-words30to35"
+all_model_checkpoint_paths: "model(1024)(8)-words30to35"

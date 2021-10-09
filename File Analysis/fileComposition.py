@@ -1,24 +1,24 @@
-# Calculating percent of file found in other file
+# Michael Williamson
+# Masters Research
+# Calculating number of passwords below and above target set (Version 1 - not NumPy)
 
 # Importing Libraries
-
 from pathlib import Path
 import numpy as np
-import math
 import time
 import re
 
+# Generated File details
 target_file_name = 'words20to25'
 upper_bound = 25 #exclusive
 lower_bound = 20 #inclusive
 generated_file_name = f'PRED{target_file_name}-1000'
-
 generating_model = 'Markov'
 
 less_than = []
 greater_than = []
 
-check_entropy_flag = False
+check_entropy_flag = False # If true, checks actual entropy
 
 def entropycheck(password):
     length = len(password)
@@ -42,7 +42,7 @@ def entropycheck(password):
         entropy = np.log2(x)
     return entropy[0]
 
-
+# Loops through Generated File
 start = time.time()
 generated_file_path = Path(__file__).with_name(generated_file_name+'.txt')
 generated_length = 0
@@ -61,8 +61,6 @@ with open(generated_file_path, 'r') as generated_file:
             if len(current_line) > 7:
                 greater_than.append(current_line)
                 print(current_line)
-        # if (generated_length%500000 == 0):
-        #         print(f'{generated_length} completed')
 end = time.time()
 print(f'Time to read and process data: {end-start}')
 print(f'{len(less_than)} words with entropy less than {lower_bound}')
