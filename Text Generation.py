@@ -12,13 +12,13 @@ import time
 # Importing the training set
 specific_file = 'words30to35'
 # Flag for if training or generating
-training = True
+training = False
 # Flags for if code will be running on its own to save run data and turn off computer
 away = True
-turn_off = False
+turn_off = True
 # Flag for saving a specific weight from the training checkpoints if model deteriorates
 save_new_weight = False
-EPOCHS = 16
+EPOCHS = 8
 # Variable for array of starter words (Increasing reduces time but increases computational load)
 number_of_lines = 2000
 
@@ -223,7 +223,7 @@ else:
   avg_length = length/line_count
   avg_length_int = int(avg_length)
   saturation = 10
-  output_path = f"./Generated Files/PRED{specific_file}-{saturation*100}.txt"
+  output_path = f"./Generated Files/PRED{specific_file}-{saturation*100}(RNN).txt"
   f = open(output_path, "a", encoding='utf-8')
   number_of_guesses = int(avg_length*line_count*saturation/number_of_lines)
   partialGuess = int(number_of_guesses/100)
