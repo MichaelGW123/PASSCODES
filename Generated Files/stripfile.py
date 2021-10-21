@@ -1,5 +1,5 @@
 from pathlib import Path
-specificFile = 'words30to35'
+specificFile = 'words80to90'
 path = Path(__file__).parent / f'PRED{specificFile}-1000(RNN).txt'
 path2 = Path(__file__).parent / f'PRED{specificFile}-1000(RNN)(Clear).txt'
 

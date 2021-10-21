@@ -14,10 +14,10 @@ tester_flag = False # Set true when testing functionality (better with small tes
 show_flag = False # True to show graph (see changing to graph format), false to save
 
 # Specific Input of Target and Generated Files
-target_file_name = 'words55to60' # specific file name
-generated_lower_file_name = 'words50to55' # lower entropy set file
+target_file_name = 'wordsgreaterthan100' # specific file name
+generated_lower_file_name = 'words90to100' # lower entropy set file
 same_file_flag = False # True if generated was trained off the same entropy as target, False if lower
-model_run = 1
+model_run = 2
 """For the Input runs, there will be 4 for each entropy set (only 2 for the lowest and highest).
 The first will be different Entropy - Markov, then different Entropy - RNN.
 3rd and 4th will be same Entropy - Markov and same Entropy - RNN respectively.
