@@ -1,0 +1,2 @@
+model_checkpoint_path: "model(1024)(36)-words90to100"
+all_model_checkpoint_paths: "model(1024)(36)-words90to100"
