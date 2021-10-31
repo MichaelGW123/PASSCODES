@@ -13,15 +13,15 @@ import os
 import time
 
 # Importing the training set
-specific_file = 'words80to90'
+specific_file = 'wordslessthan20'
 # Flag for if training or generating
-training = False
+training = True
 # Flags for if code will be running on its own to save run data and turn off computer
-away = True
-turn_off = True
+away = False
+turn_off = False
 # Flag for saving a specific weight from the training checkpoints if model deteriorates
 save_new_weight = False
-EPOCHS = 61
+EPOCHS = 4
 # Variable for array of starter words (Increasing reduces time but increases computational load)
 number_of_lines = 2000
 

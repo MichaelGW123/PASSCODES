@@ -93,8 +93,7 @@ vocab_size = len(vocab)
 embedding_dim = 256
 
 # Number of RNN units
-rnn_units = 1024
-
+rnn_units = 850
 
 class MyModel(tf.keras.Model):
   def __init__(self, vocab_size, embedding_dim, rnn_units):
@@ -107,9 +106,14 @@ class MyModel(tf.keras.Model):
   def call(self, inputs, states=None, return_state=False, training=False):
     x = inputs
     x = self.embedding(x, training=training)
+    flag = 0
     if states is None:
+      flag = 1
       states = self.gru1.get_initial_state(x)
     x, states = self.gru1(x, initial_state=states, training=training)
+    if flag == 1:
+      states = self.gru2.get_initial_state(x)
+    x, states = self.gru2(x, initial_state=states, training=training)
     x = self.dense(x, training=training)
 
     if return_state:
@@ -117,12 +121,10 @@ class MyModel(tf.keras.Model):
     else:
       return x
 
-
 model = MyModel(
     vocab_size=len(ids_from_chars.get_vocabulary()),
     embedding_dim=embedding_dim,
     rnn_units=rnn_units)
-
 
 for input_example_batch, target_example_batch in dataset.take(1):
     example_batch_predictions = model(input_example_batch)
