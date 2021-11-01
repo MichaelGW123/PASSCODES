@@ -9,7 +9,6 @@
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
 import matplotlib.pyplot as plt
-import numpy as np
 import os
 import time
 
@@ -27,35 +26,37 @@ EPOCHS = 4
 number_of_lines = 2000
 
 start = time.time()
+# Set the file name for opening the file
 file_name = 'C://Users//Michael JITN//Documents//School//Masters Code//DeepLearningEntropy//'+specific_file+'.txt'
+# Open the file to grab the first 'number_of_lines' you decided to populate the model with when generating
 file_grab_start_words = open(file_name, 'r')
 starting_words = []
 for i in range(number_of_lines):
     line = file_grab_start_words.readline()
     starting_words.append(line.strip())
+# count the rest of the lines in the file
 nonempty_lines = [line.strip("\n") for line in file_grab_start_words if line != "\n"]
 line_count = len(nonempty_lines)+number_of_lines
-print(f'Number of lines: {line_count} lines')
 file_grab_start_words.close()
+print(f'Number of lines: {line_count} lines')
+
 text = open(file_name, 'rb').read().decode(encoding='utf-8')
 length = len(text)
 print(f'Length of text: {length} characters')
 end = time.time()
 importing_data_time = end - start
+
 # The unique characters in the file
 vocab = sorted(set(text))
 print(f'{len(vocab)} unique characters')
 
 # Vectorize the Text
-ids_from_chars = preprocessing.StringLookup(vocabulary=list(vocab), mask_token=None)
 
+# preprocessing.StringLookup converts each character into a numeric ID
+ids_from_chars = preprocessing.StringLookup(vocabulary=list(vocab), mask_token=None)
 chars_from_ids = tf.keras.layers.experimental.preprocessing.StringLookup(vocabulary=ids_from_chars.get_vocabulary(), invert=True, mask_token=None)
 
-
-def text_from_ids(ids):
-  return tf.strings.reduce_join(chars_from_ids(ids), axis=-1)
-
-
+# For each input sequence the corresponding target contains the same length of text but instead of the following chars
 all_ids = ids_from_chars(tf.strings.unicode_split(text, 'UTF-8'))
 ids_dataset = tf.data.Dataset.from_tensor_slices(all_ids)
 
@@ -73,6 +74,7 @@ def split_input_target(sequence):
 
 dataset = sequences.map(split_input_target)
 
+# Create Training Batches
 # Batch size
 BATCH_SIZE = 1024
 
@@ -85,7 +87,9 @@ BUFFER_SIZE = 10000
 dataset = (dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True).prefetch(tf.data.experimental.AUTOTUNE))
 end = time.time()
 vectorizing_data_time = end - start
+
 # Part 2 Creating the RNN
+
 # Length of the vocabulary in chars
 vocab_size = len(vocab)
 
@@ -95,6 +99,7 @@ embedding_dim = 256
 # Number of RNN units
 rnn_units = 850
 
+# Creating the model, adding the necessary layers
 class MyModel(tf.keras.Model):
   def __init__(self, vocab_size, embedding_dim, rnn_units):
     super().__init__(self)
@@ -149,19 +154,20 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_prefix,
     save_weights_only=True)
 
-
+# Path of file for the checkpoints
 checkpoint_path = f'./modelweights/{specific_file}/model(1024by1024)({EPOCHS})-{specific_file}'
 
-if (training):
+if (training):  # If training, fit the model, save the weights, then save the runtime statistics
   history = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback])
   model.save_weights(checkpoint_path)
+
+  # Review models loss and training for evaluation
   print(history.history.keys())
   # summarize history for loss
   plt.plot(history.history['loss'])
   plt.title('model loss')
   plt.ylabel('loss')
   plt.xlabel('epoch')
-  plt.show()
   plt.savefig(f'{specific_file}_training.png')
   if (away):
     end = time.time()
@@ -170,17 +176,19 @@ if (training):
     record = open('./runtime.txt', "a", encoding='utf-8')
     record.write(line)
     record.close()
-else:
-  if (save_new_weight):
+else: # If the model is not training
+  if (save_new_weight): # If we are saving a weight from the checkpoint, simply load, save, exit
     model.load_weights(f'./training_checkpoints/ckpt_{EPOCHS}')
     model.save_weights(checkpoint_path)
     exit()
   
+  # If we are not saving a new weight then the model is loaded and good to generate
   model.load_weights(checkpoint_path)
 
-
   # Step 4 - Generating Text
+
   print("Generating Text Begun - ")
+
 
   class OneStep(tf.keras.Model):
     def __init__(self, model, chars_from_ids, ids_from_chars, temperature=1.0):
@@ -232,36 +240,40 @@ else:
   start = time.time()
   states = None
 
+  # Sets the tensorflow object to the array of starting words, equal to the first number_of_lines passwords in the file
   next_char = tf.constant(starting_words)
   result = [next_char]
-  avg_length = length/line_count
-  avg_length_int = int(avg_length)
+  # Saturation is the multiple of the original file. So in the case of saturation 10, we generate 10 times the trained file
   saturation = 10
-  output_path = f"./Generated Files/PRED{specific_file}-{saturation*100}(RNN).txt"
-  f = open(output_path, "a", encoding='utf-8')
-  number_of_guesses = int(avg_length*line_count*saturation/number_of_lines)
+  number_of_guesses = int(length*saturation/number_of_lines)
   partialGuess = int(number_of_guesses/100)
   print(number_of_guesses)
+  output_path = f"./Generated Files/PRED{specific_file}-{saturation*100}(RNN).txt"
+  f = open(output_path, "a", encoding='utf-8')
   for n in range(number_of_guesses):
     next_char, states = one_step_model.generate_one_step(next_char, states=states)
     result.append(next_char)
-    if (n%partialGuess==(partialGuess-1)):
+    if (n%partialGuess==(partialGuess-1)): # Helps keep track of progress
+      # Joins the tensorflow objects into strings
       temp = tf.strings.join(result)
+      # loops through the tf matrix to decode and write the strings to the output file
       for pred in range(number_of_lines):
         output = temp[pred].numpy().decode('utf-8')
         f.write(output+"\n")
       print(f'{n} completed')
+      # clears the strings already written to the file, 'next_char' maintains the last character for predictions
       result.clear()
   f.close()
+  end = time.time()
+  total = end - start
+  line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nGenerating Data: {number_of_guesses} \nGenerating Time: {total} seconds\n\n"
+  
   if (away):
-    end = time.time()
-    total = end - start
-    line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nGenerating Data: {number_of_guesses} \nGenerating Time: {total} seconds\n\n"
     record = open('./runtime.txt', "a", encoding='utf-8')
     record.write(line)
     record.close()
   else:
-    print('\nRun time:', end - start)
+    print(line)
   
 if (turn_off):
       os.system("shutdown /s /t 1")
