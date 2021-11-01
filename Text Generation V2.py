@@ -1,6 +1,6 @@
 # Michael Williamson
 # Masters Research
-# Version 2 - Multiple Hidden Layers
+# Version 2 - Two Hidden Layers
 # Recurrent Neural Network - Text Generation
 
 # Part 1 - Data Preprocessing
@@ -155,7 +155,7 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     save_weights_only=True)
 
 # Path of file for the checkpoints
-checkpoint_path = f'./modelweights/{specific_file}/model(1024by1024)({EPOCHS})-{specific_file}'
+checkpoint_path = f'./modelweights(V2)/{specific_file}/model({rnn_units}by{rnn_units})({EPOCHS})-{specific_file}'
 
 if (training):  # If training, fit the model, save the weights, then save the runtime statistics
   history = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback])
@@ -168,11 +168,11 @@ if (training):  # If training, fit the model, save the weights, then save the ru
   plt.title('model loss')
   plt.ylabel('loss')
   plt.xlabel('epoch')
-  plt.savefig(f'{specific_file}_training.png')
+  plt.savefig(f'Training Graphs/{specific_file}_2_{rnn_units}_training.png')
   if (away):
     end = time.time()
     total = end - start
-    line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nTraining Run Time: {total} seconds\n\n"
+    line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nLayers: 2\n Neurons: {rnn_units}\nTraining Run Time: {total} seconds\n\n"
     record = open('./runtime.txt', "a", encoding='utf-8')
     record.write(line)
     record.close()
