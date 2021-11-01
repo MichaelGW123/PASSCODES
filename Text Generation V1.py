@@ -8,6 +8,7 @@
 # Importing the libraries
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.keras.callbacks import EarlyStopping
 import matplotlib.pyplot as plt
 import os
 import time
@@ -21,7 +22,7 @@ away = False
 turn_off = False
 # Flag for saving a specific weight from the training checkpoints if model deteriorates
 save_new_weight = False
-EPOCHS = 4
+EPOCHS = 32
 # Variable for array of starter words (Increasing reduces time but increases computational load)
 number_of_lines = 2000
 
@@ -97,7 +98,7 @@ vocab_size = len(vocab)
 embedding_dim = 256
 
 # Number of RNN units
-rnn_units = 2048
+rnn_units = 1024
 
 # Creating the model, adding the necessary layers
 class MyModel(tf.keras.Model):
@@ -153,21 +154,22 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 checkpoint_path = f'./modelweights(V1)/{specific_file}/model({rnn_units})({EPOCHS})-{specific_file}'
 
 if (training):  # If training, fit the model, save the weights, then save the runtime statistics
-  history = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback])
+  es = EarlyStopping(monitor='loss', min_delta=0.0025, mode='min', verbose=1, patience=2)
+  history = model.fit(dataset, epochs=EPOCHS, callbacks=[es, checkpoint_callback])
   model.save_weights(checkpoint_path)
 
   # Review models loss and training for evaluation
-  print(history.history.keys())
+  print(history.history['loss'][-4:])
   # summarize history for loss
   plt.plot(history.history['loss'])
   plt.title('model loss')
   plt.ylabel('loss')
   plt.xlabel('epoch')
-  plt.savefig(f'Training Graphs/{specific_file}_1_{rnn_units}_training.png')
+  plt.savefig(f'Training Graphs/V1/{specific_file}_1_{rnn_units}_training.png')
   if (away):
     end = time.time()
     total = end - start
-    line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nLayers: 1\n Neurons: {rnn_units}\nTraining Run Time: {total} seconds\n\n"
+    line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nLayers: 1\n Neurons: {rnn_units}\nTraining Run Time: {total} seconds\nLoss: {history.history['loss'][-4:]}\n\n"
     record = open('./runtime.txt', "a", encoding='utf-8')
     record.write(line)
     record.close()

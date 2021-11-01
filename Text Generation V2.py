@@ -8,6 +8,7 @@
 # Importing the libraries
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.keras.callbacks import EarlyStopping
 import matplotlib.pyplot as plt
 import os
 import time
@@ -158,21 +159,22 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 checkpoint_path = f'./modelweights(V2)/{specific_file}/model({rnn_units}by{rnn_units})({EPOCHS})-{specific_file}'
 
 if (training):  # If training, fit the model, save the weights, then save the runtime statistics
-  history = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback])
+  es = EarlyStopping(monitor='loss', min_delta=0.0025, mode='min', verbose=1, patience=2)
+  history = model.fit(dataset, epochs=EPOCHS, callbacks=[es, checkpoint_callback])
   model.save_weights(checkpoint_path)
 
   # Review models loss and training for evaluation
-  print(history.history.keys())
+  print(history.history['loss'][-4:])
   # summarize history for loss
   plt.plot(history.history['loss'])
   plt.title('model loss')
   plt.ylabel('loss')
   plt.xlabel('epoch')
-  plt.savefig(f'Training Graphs/{specific_file}_2_{rnn_units}_training.png')
+  plt.savefig(f'Training Graphs/V2/{specific_file}_2_{rnn_units}_training.png')
   if (away):
     end = time.time()
     total = end - start
-    line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nLayers: 2\n Neurons: {rnn_units}\nTraining Run Time: {total} seconds\n\n"
+    line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nLayers: 2\n Neurons: {rnn_units}\nTraining Run Time: {total} seconds\nLoss: {history.history['loss'][-4:]}\n\n"
     record = open('./runtime.txt', "a", encoding='utf-8')
     record.write(line)
     record.close()
