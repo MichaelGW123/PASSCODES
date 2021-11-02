@@ -159,7 +159,7 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 checkpoint_path = f'./modelweights(V2)/{specific_file}/model({rnn_units}by{rnn_units})({EPOCHS})-{specific_file}'
 
 if (training):  # If training, fit the model, save the weights, then save the runtime statistics
-  es = EarlyStopping(monitor='loss', min_delta=0.1, mode='min', verbose=1, patience=1)
+  es = EarlyStopping(monitor='loss', min_delta=0.0015, mode='min', verbose=1, patience=3)
   history = model.fit(dataset, epochs=EPOCHS, callbacks=[es, checkpoint_callback])
   early_stop = len(history.history['loss'])
   checkpoint_path = f'./modelweights(V2)/{specific_file}/model({rnn_units}by{rnn_units})({early_stop})-{specific_file}'

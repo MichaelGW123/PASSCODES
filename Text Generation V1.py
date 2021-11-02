@@ -161,7 +161,7 @@ if (training):  # If training, fit the model, save the weights, then save the ru
   model.save_weights(checkpoint_path)
 
   # Review models loss and training for evaluation
-  print(history.history['loss'][-4:])
+  print(history.history['loss'])
   # summarize history for loss
   plt.plot(history.history['loss'])
   plt.title('model loss')
