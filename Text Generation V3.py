@@ -22,7 +22,7 @@ away = False
 turn_off = False
 # Flag for saving a specific weight from the training checkpoints if model deteriorates
 save_new_weight = False
-EPOCHS = 4
+EPOCHS = 8
 # Variable for array of starter words (Increasing reduces time but increases computational load)
 number_of_lines = 2000
 
@@ -164,7 +164,7 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 checkpoint_path = f'./modelweights(V3)/{specific_file}/model({rnn_units}by{rnn_units}by{rnn_units})({EPOCHS})-{specific_file}'
 
 if (training):  # If training, fit the model, save the weights, then save the runtime statistics
-  es = EarlyStopping(monitor='loss', min_delta=0.0025, mode='min', verbose=1, patience=2)
+  es = EarlyStopping(monitor='loss', min_delta=0.0015, mode='min', verbose=1, patience=2)
   history = model.fit(dataset, epochs=EPOCHS, callbacks=[es, checkpoint_callback])
   model.save_weights(checkpoint_path)
 
