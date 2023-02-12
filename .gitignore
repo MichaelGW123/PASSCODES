@@ -1,3 +1,6 @@
-Source Files/*
+/Source Files
 /training_checkpoints
+/modelweights
 .venv/
+/Training Graphs
+/Generated Files/*.txt
