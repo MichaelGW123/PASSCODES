@@ -18,9 +18,6 @@ specific_file = 'wordslessthan20'
 # Flag for if training or generating
 training = True
 modelVer = 1
-# Flags for if code will be running on its own to save run data and turn off computer
-away = False
-turn_off = False
 # Flag for saving a specific weight from the training checkpoints if model deteriorates
 save_new_weight = False
 EPOCHS = 32
@@ -29,7 +26,7 @@ number_of_lines = 2000
 
 start = time.time()
 # Set the file name for opening the file
-file_name = 'C://Users//Michael JITN//Documents//School//Masters Code//DeepLearningEntropy//'+specific_file+'.txt'
+file_name = '//home//morpheus//Research//DeepLearningEntropy//Source Files//'+specific_file+'.txt'
 # Open the file to grab the first 'number_of_lines' you decided to populate the model with when generating
 file_grab_start_words = open(file_name, 'r')
 starting_words = []
@@ -212,7 +209,7 @@ print("Mean loss:        ", mean_loss)
 model.compile(optimizer='adam', loss=loss)
 
 # Directory where the checkpoints will be saved
-checkpoint_dir = './training_checkpoints'
+checkpoint_dir = './training_checkpoints/Version {modelVer}'
 # Name of the checkpoint files
 checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt_{epoch}")
 
@@ -221,13 +218,13 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     save_weights_only=True)
 
 # Path of file for the checkpoints
-checkpoint_path = f'./modelweights(V1)/{specific_file}/model({rnn_units})({EPOCHS})-{specific_file}'
+checkpoint_path = f'./modelweights/Version {modelVer}/{specific_file}/model({rnn_units})({EPOCHS})-{specific_file}'
 
 if (training):  # If training, fit the model, save the weights, then save the runtime statistics
   es = EarlyStopping(monitor='loss', min_delta=0.0015, mode='min', verbose=1, patience=3)
   history = model.fit(dataset, epochs=EPOCHS, callbacks=[es, checkpoint_callback])
   early_stop = len(history.history['loss'])
-  checkpoint_path = f'./modelweights(V2)/{specific_file}/model({rnn_units}by{rnn_units})({early_stop})-{specific_file}'
+  checkpoint_path = f'./modelweights/Version {modelVer}/{specific_file}/model({rnn_units}by{rnn_units})({early_stop})-{specific_file}'
   model.save_weights(checkpoint_path)
 
   # Review models loss and training for evaluation
@@ -237,7 +234,7 @@ if (training):  # If training, fit the model, save the weights, then save the ru
   plt.title('model loss')
   plt.ylabel('loss')
   plt.xlabel('epoch')
-  plt.savefig(f'Training Graphs/V1/{specific_file}_1_{rnn_units}_training.png')
+  plt.savefig(f'Training Graphs/Version {modelVer}/{specific_file}_{rnn_units}_training.png')
   if (away):
     end = time.time()
     total = end - start
@@ -247,7 +244,7 @@ if (training):  # If training, fit the model, save the weights, then save the ru
     record.close()
 else: # If the model is not training
   if (save_new_weight): # If we are saving a weight from the checkpoint, simply load, save, exit
-    model.load_weights(f'./training_checkpoints/ckpt_{EPOCHS}')
+    model.load_weights(f'./training_checkpoints/Version {modelVer}/ckpt_{EPOCHS}')
     model.save_weights(checkpoint_path)
     exit()
   
@@ -255,7 +252,6 @@ else: # If the model is not training
   model.load_weights(checkpoint_path)
 
   # Step 4 - Generating Text
-
   print("Generating Text Begun - ")
 
 
@@ -317,7 +313,7 @@ else: # If the model is not training
   number_of_guesses = int(length*saturation/number_of_lines)
   partialGuess = int(number_of_guesses/100)
   print(number_of_guesses)
-  output_path = f"./Generated Files/PRED{specific_file}-{saturation*100}(RNN).txt"
+  output_path = f"./Generated Files/Version {modelVer}/PRED{specific_file}-{saturation*100}(RNN).txt"
   f = open(output_path, "a", encoding='utf-8')
   for n in range(number_of_guesses):
     next_char, states = one_step_model.generate_one_step(next_char, states=states)
@@ -337,12 +333,9 @@ else: # If the model is not training
   total = end - start
   line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nGenerating Data: {number_of_guesses} \nGenerating Time: {total} seconds\n\n"
   
-  if (away):
-    record = open('./runtime.txt', "a", encoding='utf-8')
-    record.write(line)
-    record.close()
-  else:
-    print(line)
+  record = open('./runtime.txt', "a", encoding='utf-8')
+  record.write(line)
+  record.close()
+  print(line)
   
-if (turn_off):
-      os.system("shutdown /s /t 1")
+os.system("python3 shutdown_comp.py")
