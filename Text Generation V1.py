@@ -17,6 +17,7 @@ import time
 specific_file = 'wordslessthan20'
 # Flag for if training or generating
 training = True
+modelVer = 1
 # Flags for if code will be running on its own to save run data and turn off computer
 away = False
 turn_off = False
@@ -101,7 +102,7 @@ embedding_dim = 256
 rnn_units = 1024
 
 # Creating the model, adding the necessary layers
-class MyModel(tf.keras.Model):
+class MyModelOne(tf.keras.Model):
   def __init__(self, vocab_size, embedding_dim, rnn_units):
     super().__init__(self)
     self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
@@ -122,7 +123,76 @@ class MyModel(tf.keras.Model):
       return x
 
 
+class MyModelTwo(tf.keras.Model):
+  def __init__(self, vocab_size, embedding_dim, rnn_units):
+    super().__init__(self)
+    self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
+    self.gru1 = tf.keras.layers.GRU(rnn_units, return_sequences=True, return_state=True)
+    self.gru2 = tf.keras.layers.GRU(rnn_units, return_sequences=True, return_state=True)
+    self.dense = tf.keras.layers.Dense(vocab_size)
+
+  def call(self, inputs, states=None, return_state=False, training=False):
+    x = inputs
+    x = self.embedding(x, training=training)
+    flag = 0
+    if states is None:
+      flag = 1
+      states = self.gru1.get_initial_state(x)
+    x, states = self.gru1(x, initial_state=states, training=training)
+    if flag == 1:
+      states = self.gru2.get_initial_state(x)
+    x, states = self.gru2(x, initial_state=states, training=training)
+    x = self.dense(x, training=training)
+
+    if return_state:
+      return x, states
+    else:
+      return x
+
+
+class MyModelThree(tf.keras.Model):
+  def __init__(self, vocab_size, embedding_dim, rnn_units):
+    super().__init__(self)
+    self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
+    self.gru1 = tf.keras.layers.GRU(rnn_units, return_sequences=True, return_state=True)
+    self.gru2 = tf.keras.layers.GRU(rnn_units, return_sequences=True, return_state=True)
+    self.gru3 = tf.keras.layers.GRU(rnn_units, return_sequences=True, return_state=True)
+    self.dense = tf.keras.layers.Dense(vocab_size)
+
+  def call(self, inputs, states=None, return_state=False, training=False):
+    x = inputs
+    x = self.embedding(x, training=training)
+    flag = 0
+    if states is None:
+      flag = 1
+      states = self.gru1.get_initial_state(x)
+    x, states = self.gru1(x, initial_state=states, training=training)
+    if flag == 1:
+      flag = 2
+      states = self.gru2.get_initial_state(x)
+    x, states = self.gru2(x, initial_state=states, training=training)
+    if flag == 2:
+      states = self.gru3.get_initial_state(x)
+    x, states = self.gru3(x, initial_state=states, training=training)
+    x = self.dense(x, training=training)
+
+    if return_state:
+      return x, states
+    else:
+      return x
+
 model = MyModel(
+    vocab_size=len(ids_from_chars.get_vocabulary()),
+    embedding_dim=embedding_dim,
+    rnn_units=rnn_units)
+    
+if (modelVer == 2):
+  model = MyModelTwo(
+    vocab_size=len(ids_from_chars.get_vocabulary()),
+    embedding_dim=embedding_dim,
+    rnn_units=rnn_units)
+elif (modelVer == 3):
+  model = MyModelThree(
     vocab_size=len(ids_from_chars.get_vocabulary()),
     embedding_dim=embedding_dim,
     rnn_units=rnn_units)
