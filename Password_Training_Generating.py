@@ -6,11 +6,12 @@
 # Part 1 - Data Preprocessing
 
 # Importing the libraries
+import os
+os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.keras.callbacks import EarlyStopping
 import matplotlib.pyplot as plt
-import os
 import time
 
 # Imported training set
@@ -18,7 +19,7 @@ specific_file = 'wordslessthan20'
 
 training = True
 modelVer = 1
-EPOCHS = 2
+EPOCHS = 1
 save_new_weight = False
 
 number_of_lines = 2000 # Variable for array of starter words (Increasing reduces time but increases computational load)
@@ -27,13 +28,14 @@ start = time.time()
 # Set the file name for opening the file
 file_name = '//home//morpheus//Research//DeepLearningEntropy//Source Files//'+specific_file+'.txt'
 # Checkpoint to load if saving
-check_to_load = "./training_checkpoints/Version {modelVer}/ckpt_{EPOCHS}"
+check_to_load = "./training_checkpoints/ckpt_{EPOCHS}"
 
 if (not os.path.exists(file_name)):
   print("File Name specified does not exist.")
-if (not os.path.exists(check_to_load)):
+  exit()
+if (not os.path.exists(check_to_load) and save_new_weight):
   print("Checkpoint to load does not exist.")
-
+  exit()
 
 # Open the file to grab the first 'number_of_lines' you decided to populate the model with when generating
 file_grab_start_words = open(file_name, 'r')
@@ -58,44 +60,52 @@ vocab = sorted(set(text))
 print(f'{len(vocab)} unique characters')
 
 # Vectorize the Text
+# Use GPU if it's available
+if tf.test.is_gpu_available():
+    device = '/GPU:0'
+else:
+    device = '/CPU:0'
+
+with tf.device(device):
+  # preprocessing.StringLookup converts each character into a numeric ID
+  ids_from_chars = preprocessing.StringLookup(vocabulary=list(vocab), mask_token=None)
+  chars_from_ids = tf.keras.layers.experimental.preprocessing.StringLookup(vocabulary=ids_from_chars.get_vocabulary(), invert=True, mask_token=None)
+
+  # For each input sequence the corresponding target contains the same length of text but instead of the following chars
+  all_ids = ids_from_chars(tf.strings.unicode_split(text, 'UTF-8'))
+  ids_dataset = tf.data.Dataset.from_tensor_slices(all_ids)
+
+  seq_length = 7
+  examples_per_epoch = len(text)//(seq_length+1)
+
+  sequences = ids_dataset.batch(seq_length+1, drop_remainder=True)
 
 
-
-# preprocessing.StringLookup converts each character into a numeric ID
-ids_from_chars = preprocessing.StringLookup(vocabulary=list(vocab), mask_token=None)
-chars_from_ids = tf.keras.layers.experimental.preprocessing.StringLookup(vocabulary=ids_from_chars.get_vocabulary(), invert=True, mask_token=None)
-
-# For each input sequence the corresponding target contains the same length of text but instead of the following chars
-all_ids = ids_from_chars(tf.strings.unicode_split(text, 'UTF-8'))
-ids_dataset = tf.data.Dataset.from_tensor_slices(all_ids)
-
-seq_length = 100
-examples_per_epoch = len(text)//(seq_length+1)
-
-sequences = ids_dataset.batch(seq_length+1, drop_remainder=True)
+  def split_input_target(sequence):
+      input_text = sequence[:-1]
+      target_text = sequence[1:]
+      return input_text, target_text
 
 
-def split_input_target(sequence):
-    input_text = sequence[:-1]
-    target_text = sequence[1:]
-    return input_text, target_text
+  dataset = sequences.map(split_input_target)
+
+  # Create Training Batches
+  # Batch size
+  BATCH_SIZE = 64
+
+  # Buffer size to shuffle the dataset
+  # (TF data is designed to work with possibly infinite sequences,
+  # so it doesn't attempt to shuffle the entire sequence in memory. Instead,
+  # it maintains a buffer in which it shuffles elements).
+  BUFFER_SIZE = 10000
+
+  dataset = (dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True).prefetch(tf.data.experimental.AUTOTUNE))
 
 
-dataset = sequences.map(split_input_target)
-
-# Create Training Batches
-# Batch size
-BATCH_SIZE = 1024
-
-# Buffer size to shuffle the dataset
-# (TF data is designed to work with possibly infinite sequences,
-# so it doesn't attempt to shuffle the entire sequence in memory. Instead,
-# it maintains a buffer in which it shuffles elements).
-BUFFER_SIZE = 10000
-
-dataset = (dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True).prefetch(tf.data.experimental.AUTOTUNE))
 end = time.time()
 vectorizing_data_time = end - start
+print(vectorizing_data_time)
+exit()
 
 # Part 2 Creating the RNN
 
