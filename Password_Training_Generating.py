@@ -17,10 +17,10 @@ import time
 specific_file = 'wordslessthan20'
 # Flag for if training or generating
 training = True
-modelVer = 1
+modelVer = 3
 # Flag for saving a specific weight from the training checkpoints if model deteriorates
 save_new_weight = False
-EPOCHS = 32
+EPOCHS = 2
 # Variable for array of starter words (Increasing reduces time but increases computational load)
 number_of_lines = 2000
 
@@ -96,7 +96,7 @@ vocab_size = len(vocab)
 embedding_dim = 256
 
 # Number of RNN units
-rnn_units = 1024
+rnn_units = 512
 
 # Creating the model, adding the necessary layers
 class MyModelOne(tf.keras.Model):
@@ -178,7 +178,7 @@ class MyModelThree(tf.keras.Model):
     else:
       return x
 
-model = MyModel(
+model = MyModelOne(
     vocab_size=len(ids_from_chars.get_vocabulary()),
     embedding_dim=embedding_dim,
     rnn_units=rnn_units)
@@ -209,7 +209,7 @@ print("Mean loss:        ", mean_loss)
 model.compile(optimizer='adam', loss=loss)
 
 # Directory where the checkpoints will be saved
-checkpoint_dir = './training_checkpoints/Version {modelVer}'
+checkpoint_dir = './training_checkpoints'
 # Name of the checkpoint files
 checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt_{epoch}")
 
@@ -235,13 +235,12 @@ if (training):  # If training, fit the model, save the weights, then save the ru
   plt.ylabel('loss')
   plt.xlabel('epoch')
   plt.savefig(f'Training Graphs/Version {modelVer}/{specific_file}_{rnn_units}_training.png')
-  if (away):
-    end = time.time()
-    total = end - start
-    line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nLayers: 1\n Neurons: {rnn_units}\nTraining Run Time: {total} seconds\nLoss: {history.history['loss'][-4:]}\n\n"
-    record = open('./runtime.txt', "a", encoding='utf-8')
-    record.write(line)
-    record.close()
+  end = time.time()
+  total = end - start
+  line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nLayers: {modelVer}\n Neurons: {rnn_units}\nTotal Run Time: {total} seconds\nLoss: {history.history['loss'][-4:]}\n\n"
+  record = open('./runtime.txt', "a", encoding='utf-8')
+  record.write(line)
+  record.close()
 else: # If the model is not training
   if (save_new_weight): # If we are saving a weight from the checkpoint, simply load, save, exit
     model.load_weights(f'./training_checkpoints/Version {modelVer}/ckpt_{EPOCHS}')
@@ -338,4 +337,4 @@ else: # If the model is not training
   record.close()
   print(line)
   
-os.system("python shutdown_comp.py")
+os.system("python Helpers/shutdown_comp.py")
