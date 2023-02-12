@@ -7,7 +7,6 @@
 
 # Importing the libraries
 import os
-os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.keras.callbacks import EarlyStopping
@@ -91,7 +90,7 @@ with tf.device(device):
 
   # Create Training Batches
   # Batch size
-  BATCH_SIZE = 64
+  BATCH_SIZE = 512
 
   # Buffer size to shuffle the dataset
   # (TF data is designed to work with possibly infinite sequences,
