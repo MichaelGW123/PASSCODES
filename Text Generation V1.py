@@ -338,4 +338,4 @@ else: # If the model is not training
   record.close()
   print(line)
   
-os.system("python3 shutdown_comp.py")
+os.system("python shutdown_comp.py")
