@@ -13,20 +13,28 @@ import matplotlib.pyplot as plt
 import os
 import time
 
-# Importing the training set
+# Imported training set
 specific_file = 'wordslessthan20'
-# Flag for if training or generating
+
 training = True
-modelVer = 3
-# Flag for saving a specific weight from the training checkpoints if model deteriorates
-save_new_weight = False
+modelVer = 1
 EPOCHS = 2
-# Variable for array of starter words (Increasing reduces time but increases computational load)
-number_of_lines = 2000
+save_new_weight = False
+
+number_of_lines = 2000 # Variable for array of starter words (Increasing reduces time but increases computational load)
 
 start = time.time()
 # Set the file name for opening the file
 file_name = '//home//morpheus//Research//DeepLearningEntropy//Source Files//'+specific_file+'.txt'
+# Checkpoint to load if saving
+check_to_load = "./training_checkpoints/Version {modelVer}/ckpt_{EPOCHS}"
+
+if (not os.path.exists(file_name)):
+  print("File Name specified does not exist.")
+if (not os.path.exists(check_to_load)):
+  print("Checkpoint to load does not exist.")
+
+
 # Open the file to grab the first 'number_of_lines' you decided to populate the model with when generating
 file_grab_start_words = open(file_name, 'r')
 starting_words = []
@@ -50,6 +58,8 @@ vocab = sorted(set(text))
 print(f'{len(vocab)} unique characters')
 
 # Vectorize the Text
+
+
 
 # preprocessing.StringLookup converts each character into a numeric ID
 ids_from_chars = preprocessing.StringLookup(vocabulary=list(vocab), mask_token=None)
@@ -97,6 +107,8 @@ embedding_dim = 256
 
 # Number of RNN units
 rnn_units = 512
+if (modelVer == 1):
+  rnn_units = 1024
 
 # Creating the model, adding the necessary layers
 class MyModelOne(tf.keras.Model):
@@ -220,7 +232,7 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 # Path of file for the checkpoints
 checkpoint_path = f'./modelweights/Version {modelVer}/{specific_file}/model({rnn_units})({EPOCHS})-{specific_file}'
 
-if (training):  # If training, fit the model, save the weights, then save the runtime statistics
+if (training and not save_new_weight):  # If training, fit the model, save the weights, then save the runtime statistics
   es = EarlyStopping(monitor='loss', min_delta=0.0015, mode='min', verbose=1, patience=3)
   history = model.fit(dataset, epochs=EPOCHS, callbacks=[es, checkpoint_callback])
   early_stop = len(history.history['loss'])
@@ -243,7 +255,7 @@ if (training):  # If training, fit the model, save the weights, then save the ru
   record.close()
 else: # If the model is not training
   if (save_new_weight): # If we are saving a weight from the checkpoint, simply load, save, exit
-    model.load_weights(f'./training_checkpoints/Version {modelVer}/ckpt_{EPOCHS}')
+    model.load_weights(f'./training_checkpoints/ckpt_{EPOCHS}').expect_partial()
     model.save_weights(checkpoint_path)
     exit()
   
