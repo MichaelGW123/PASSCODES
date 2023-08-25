@@ -25,7 +25,9 @@ number_of_lines = 2000 # Variable for array of starter words (Increasing reduces
 
 start = time.time()
 # Set the file name for opening the file
-file_name = '//home//morpheus//Research//DeepLearningEntropy//Source Files//'+specific_file+'.txt'
+current_dir = os.getcwd()
+file_end = '//Source Files//'+specific_file+'.txt'
+file_name = current_dir + file_end
 # Checkpoint to load if saving
 check_to_load = "./training_checkpoints/ckpt_{EPOCHS}"
 
@@ -59,8 +61,8 @@ vocab = sorted(set(text))
 print(f'{len(vocab)} unique characters')
 
 # Vectorize the Text
-# Use GPU if it's available
-if tf.test.is_gpu_available():
+# # Use GPU if it's available
+if tf.config.list_physical_devices('GPU'):
     device = '/GPU:0'
 else:
     device = '/CPU:0'
@@ -90,7 +92,7 @@ with tf.device(device):
 
   # Create Training Batches
   # Batch size
-  BATCH_SIZE = 512
+  BATCH_SIZE = 1024
 
   # Buffer size to shuffle the dataset
   # (TF data is designed to work with possibly infinite sequences,
@@ -104,7 +106,6 @@ with tf.device(device):
 end = time.time()
 vectorizing_data_time = end - start
 print(vectorizing_data_time)
-exit()
 
 # Part 2 Creating the RNN
 
