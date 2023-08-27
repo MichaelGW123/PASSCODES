@@ -10,8 +10,8 @@ import re
 
 # Generated File details
 target_file_name = 'wordslessthan20'
-upper_bound = 20 #exclusive
-lower_bound = 0 #inclusive
+upper_bound = 20  # exclusive
+lower_bound = 0  # inclusive
 generating_model = 'Markov'
 generated_file_name = f'PRED{target_file_name}-1000({generating_model})'
 
@@ -22,7 +22,7 @@ greater_than = []
 password_length = []
 password_pool = []
 
-check_entropy_flag = False # If true, checks actual entropy
+check_entropy_flag = False  # If true, checks actual entropy
 
 # Loops through Generated File
 start = time.time()
@@ -31,13 +31,18 @@ generated_length = 0
 with open(generated_file_path, 'r') as generated_file:
     for line in generated_file:
         current_line = line.strip()
-        generated_length+=1
+        generated_length += 1
         password_length.append(len(current_line))
         pool = 0
-        lower_match = re.compile(r'[a-z]').findall(current_line)  # Finding if the password contains lowecase letters.
-        upper_match = re.compile(r'[A-Z]').findall(current_line)  # Finding if the password contains uppercase letters.
-        number_match = re.compile(r'[0-9]').findall(current_line)  # Finding if the password contains numbers.
-        symbol_match = re.compile(r'[!"#$%&\'\(\)\*\+\,-./\:\;<>=?@\{\}\[\]\"^_`~|]').findall(current_line)  # Finding if the password contains special characters.
+        # Finding if the password contains lowecase letters.
+        lower_match = re.compile(r'[a-z]').findall(current_line)
+        # Finding if the password contains uppercase letters.
+        upper_match = re.compile(r'[A-Z]').findall(current_line)
+        # Finding if the password contains numbers.
+        number_match = re.compile(r'[0-9]').findall(current_line)
+        # Finding if the password contains special characters.
+        symbol_match = re.compile(
+            r'[!"#$%&\'\(\)\*\+\,-./\:\;<>=?@\{\}\[\]\"^_`~|]').findall(current_line)
         if (len(lower_match) != 0):
             pool += 26
         if (len(upper_match) != 0):
