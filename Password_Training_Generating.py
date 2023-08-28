@@ -392,7 +392,7 @@ def main():
     ### Create model based on number of hidden layers desired ###
     model = create_rnn_model(vocab_size, embedding_dim, rnn_units, num_layers)
 
-    for input_example_batch in dataset.take(1):
+    for input_example_batch, target_example_batch in dataset.take(1):
         example_batch_predictions = model(input_example_batch)
 
     model.summary()
