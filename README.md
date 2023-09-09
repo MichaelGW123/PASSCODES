@@ -41,6 +41,14 @@ Right now this simply is used to generate files and then we compare that, but th
 
 1. Using the training set, seperate it into different entropies of any desired granularity.
 
+- This step starts off with using the 'hashesorg2019' file. File_Analysis/basic_process.py will create a csv, with each row containing [password (column 0), entropy (column 1)]. Entropy will be calculated by considering the unique pools of characters pulled from (ex. lowercase alphabetical, uppercase alphabetical, numerical, and special symbols) to assemble the character set then raised to the power of the length of the password, then the log2 computed. This will make it easier to modify later as we will not need to recalcuate the entropy.
+
+- File_Analysis/outliers.py will generate 2 CSVs based on the input CSV. It has a hard coded threshold for mean + 6 \* std_dev for the hashesorg2019.csv file. It will separate those with entropy above that limit and those below into their respective CSV file.
+
+- File_Analysis/kde.py (currently doesn't work because of memory constraints) will generate a KDE of the entropy for the passwords.
+
+- File_Analysis/sort_file.py will sort a file in ascending order of entropy written to a new CSV file.
+
 2. Determine how you want to test effectiveness. For example, you can test in the same entropy bin by using a test and training set, or aim for the entropy set above the one you train with (therefore allowing you to use 100% of the entropy bin below your target set)
 
 3. Train your model on the desired set.
