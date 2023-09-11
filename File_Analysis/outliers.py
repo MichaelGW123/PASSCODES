@@ -4,7 +4,11 @@ import csv
 csv_file = "/home/morpheus/Research/DeepLearningEntropy/Source_Files/hashesorg2019.csv"
 
 # Define the threshold (6 times the standard deviation)
-threshold = 387
+threshold = 600
+lowest_pass = " "
+highest_pass = " "
+highest_kept = 0
+lowest_outlier = 10000
 
 # Initialize counters for processed rows
 processed_rows = 0
@@ -33,8 +37,14 @@ with open(above_threshold_csv, 'w', newline='') as above_csv, \
             # Check if the number is above the threshold
             if number > threshold:
                 above_writer.writerow([password, number])
+                if (number < lowest_outlier):
+                    lowest_outlier = number
+                    lowest_pass = password
             else:
                 below_writer.writerow([password, number])
+                if (number > highest_kept):
+                    highest_kept = number
+                    highest_pass = password
 
             # Increment the processed row counter
             processed_rows += 1
@@ -44,4 +54,5 @@ with open(above_threshold_csv, 'w', newline='') as above_csv, \
                 print(f"Processed {processed_rows} rows.")
 
 # Print the total number of rows processed
-print(f"Total processed rows: {processed_rows}")
+print(
+    f"Total processed rows: {processed_rows}. Highest Kept {highest_pass} - {highest_kept} and Lowest Outlier {lowest_pass} - {lowest_outlier}")
