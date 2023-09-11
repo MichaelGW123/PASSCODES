@@ -35,6 +35,7 @@ def process_file(input_file, output_file):
 
     total_lines = 0
     processed_lines = 0
+    usable_lines = 0
 
     # Start the timer
     start_time = time.time()
@@ -46,10 +47,11 @@ def process_file(input_file, output_file):
                 line = line.strip()
                 total_lines += 1
 
-                if all(char in string.printable[1:-6] for char in line):
+                if all(char in string.printable[0:-6] for char in line):
                     entropy = calculate_entropy(line)
                     if (entropy > 0):
                         valid_lines.append((line, entropy))
+                        usable_lines += 1
 
                 processed_lines += 1
 
@@ -71,9 +73,14 @@ def process_file(input_file, output_file):
                 pass
 
     if valid_lines:
+        valid_lines.sort(key=lambda x: x[1])
         with open(output_file, 'a', newline='', encoding='utf-8') as csv_file:
             csv_writer = csv.writer(csv_file)
             csv_writer.writerows(valid_lines)
+
+    elapsed_time = time.time() - start_time
+    print(
+        f"Processed {processed_lines}/{total_lines} lines, {usable_lines} written in {elapsed_time:.2f} seconds")
 
 
 if __name__ == "__main__":
