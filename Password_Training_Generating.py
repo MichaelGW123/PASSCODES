@@ -368,7 +368,7 @@ def generate_text(model, starting_words, checkpoint_path, chars_from_ids, ids_fr
 
 
 def main():
-    specific_file = 'globs//entropy_bin_1'  # Imported training set
+    specific_file = 'globs/entropy_bin_1'  # Imported training set
 
     training = True
     generating = False
@@ -383,7 +383,7 @@ def main():
     number_of_lines = 2000  # Variable for array of starter words
 
     current_dir = os.getcwd()  # Set the file name for opening the file
-    file_end = '//Source_Files//'+specific_file+'.txt'
+    file_end = '/Source_Files/'+specific_file+'.txt'
     file_name = current_dir + file_end
 
     # Path of file for the checkpoints
