@@ -328,20 +328,34 @@ def generate_text(model, starting_words, checkpoint_path, chars_from_ids, ids_fr
     print(number_of_guesses)
     output_path = f"./Generated_Files/{num_layers} Hidden Layers/PRED{specific_file}-{saturation*100}(RNN).txt"
     f = open(output_path, "a", encoding='utf-8')
+    current_line = ""
     for n in range(number_of_guesses):
         next_char, states = one_step_model.generate_one_step(
             next_char, states=states)
         result.append(next_char)
-        if (n % partial_guess == (partial_guess-1)):  # Helps keep track of progress
-            # Joins the tensorflow objects into strings
-            temp = tf.strings.join(result)
-            # loops through the tf matrix to decode and write the strings to the output file
-            for pred in range(number_of_lines):
-                output = temp[pred].numpy().decode('utf-8')
+
+        # Convert the TensorFlow objects into strings
+        temp = tf.strings.join(result)
+
+        # Loop through the tf matrix to decode the strings
+        for pred in range(number_of_lines):
+            output = temp[pred].numpy().decode('utf-8')
+            current_line += output  # Add the generated text to the current line
+
+            # Check if the current line ends with a space
+            if current_line.endswith(' '):
                 f.write(output+"\n")
+                current_line
+
+        if (n % partial_guess == (partial_guess-1)):  # Helps keep track of progress
             print(f'{n} completed')
             # clears the strings already written to the file, 'next_char' maintains the last character for predictions
             result.clear()
+
+    # After the loop, check if there's any remaining text in the current line
+    if current_line:
+        f.write(current_line)
+        
     f.close()
     end = time.time()
     generate_time = end - start
@@ -354,7 +368,7 @@ def generate_text(model, starting_words, checkpoint_path, chars_from_ids, ids_fr
 
 
 def main():
-    specific_file = 'wordslessthan20'  # Imported training set
+    specific_file = '//globs//entropy_bin_1'  # Imported training set
 
     training = True
     generating = False

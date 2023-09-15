@@ -1,4 +1,4 @@
-# Password Generation and Cracking Potential Comparison
+# Password Analysis with Sequential Structures using Computational Openings for Defensive and Evaluative Security
 
 ## Overview
 
