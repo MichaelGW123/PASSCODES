@@ -88,7 +88,7 @@ def preprocess_data(file_name, number_of_lines):
 
         # Create Training Batches
         # Batch size
-        BATCH_SIZE = 1024
+        BATCH_SIZE = 512
 
         # Buffer size to shuffle the dataset
         # (TF data is designed to work with possibly infinite sequences,
