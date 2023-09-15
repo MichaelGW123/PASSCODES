@@ -49,7 +49,7 @@ def process_file(input_file, output_file):
 
                 if all(char in string.printable[0:-6] for char in line):
                     entropy = calculate_entropy(line)
-                    if (entropy > 0):
+                    if entropy > 0:
                         valid_lines.append((line, entropy))
                         usable_lines += 1
 
@@ -63,9 +63,9 @@ def process_file(input_file, output_file):
 
                     valid_lines.sort(key=lambda x: x[1])
 
-                    with open(output_file, 'a', newline='', encoding='utf-8') as csv_file:
-                        csv_writer = csv.writer(csv_file)
-                        csv_writer.writerows(valid_lines)
+                    with open(output_file, 'a', newline='', encoding='utf-8') as tsv_file:
+                        tsv_writer = csv.writer(tsv_file, delimiter='\t')
+                        tsv_writer.writerows(valid_lines)
 
                     valid_lines = []
 
@@ -74,9 +74,9 @@ def process_file(input_file, output_file):
 
     if valid_lines:
         valid_lines.sort(key=lambda x: x[1])
-        with open(output_file, 'a', newline='', encoding='utf-8') as csv_file:
-            csv_writer = csv.writer(csv_file)
-            csv_writer.writerows(valid_lines)
+        with open(output_file, 'a', newline='', encoding='utf-8') as tsv_file:
+            tsv_writer = csv.writer(tsv_file, delimiter='\t')
+            tsv_writer.writerows(valid_lines)
 
     elapsed_time = time.time() - start_time
     print(
@@ -85,6 +85,6 @@ def process_file(input_file, output_file):
 
 if __name__ == "__main__":
     input_file = "/home/morpheus/Research/DeepLearningEntropy/Source_Files/hashesorg2019"
-    output_file = "/home/morpheus/Research/DeepLearningEntropy/Source_Files/hashesorg2019.csv"
+    output_file = "/home/morpheus/Research/DeepLearningEntropy/Source_Files/hashesorg2019.tsv"
 
     process_file(input_file, output_file)
