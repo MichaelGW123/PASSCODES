@@ -355,7 +355,7 @@ def generate_text(model, starting_words, checkpoint_path, chars_from_ids, ids_fr
     # After the loop, check if there's any remaining text in the current line
     if current_line:
         f.write(current_line)
-        
+
     f.close()
     end = time.time()
     generate_time = end - start
@@ -368,7 +368,7 @@ def generate_text(model, starting_words, checkpoint_path, chars_from_ids, ids_fr
 
 
 def main():
-    specific_file = '//globs//entropy_bin_1'  # Imported training set
+    specific_file = 'globs//entropy_bin_1'  # Imported training set
 
     training = True
     generating = False
