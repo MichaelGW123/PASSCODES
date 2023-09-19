@@ -10,8 +10,8 @@ create_directory() {
 }
 
 # Main script
-main_directories=("Generated_Files" "model_weights" "training_checkpoints" "Training_Graphs")
-subdirectories=("1 Hidden Layers" "2 Hidden Layers" "3 Hidden Layers")
+main_directories=("Generated_Files" "model_weights" "Source_Files" "training_checkpoints" "Training_Graphs")
+subdirectories=("1_Hidden_Layers" "2_Hidden_Layers" "3_Hidden_Layers")
 
 for main_dir in "${main_directories[@]}"; do
     create_directory "$main_dir"
