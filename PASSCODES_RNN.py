@@ -31,7 +31,7 @@ print(f'{len(vocab)} unique characters')
 example_texts = ['abcdefg', 'xyz']
 
 chars = tf.strings.unicode_split(example_texts, input_encoding='UTF-8')
-chars
+print(chars)
 
 
 # %%
@@ -41,7 +41,7 @@ ids_from_chars = tf.keras.layers.StringLookup(
 
 # %%
 ids = ids_from_chars(chars)
-ids
+print(ids)
 
 
 # %%
@@ -51,11 +51,11 @@ chars_from_ids = tf.keras.layers.StringLookup(
 
 # %%
 chars = chars_from_ids(ids)
-chars
+print(chars)
 
 
 # %%
-tf.strings.reduce_join(chars, axis=-1).numpy()
+print(tf.strings.reduce_join(chars, axis=-1).numpy())
 
 
 # %%
@@ -65,7 +65,7 @@ def text_from_ids(ids):
 
 # %%
 all_ids = ids_from_chars(tf.strings.unicode_split(text, 'UTF-8'))
-all_ids
+print(all_ids)
 
 
 # %%
@@ -101,7 +101,7 @@ def split_input_target(sequence):
 
 
 # %%
-split_input_target(list("Tensorflow"))
+print(split_input_target(list("Tensorflow")))
 
 
 # %%
@@ -130,7 +130,7 @@ dataset = (
     .batch(BATCH_SIZE, drop_remainder=True)
     .prefetch(tf.data.experimental.AUTOTUNE))
 
-dataset
+print(dataset)
 
 
 # %%
@@ -207,7 +207,7 @@ print("Mean loss:        ", example_batch_mean_loss)
 
 
 # %%
-tf.exp(example_batch_mean_loss).numpy()
+print(tf.exp(example_batch_mean_loss).numpy())
 
 
 # %%
