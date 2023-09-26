@@ -43,13 +43,15 @@ Right now this simply is used to generate files and then we compare that, but th
 
 - This step starts off with using the 'hashesorg2019' file. File_Analysis/basic_process.py will create a tsv, with each row containing [password (column 0), entropy (column 1)]. Entropy will be calculated by considering the unique pools of characters pulled from (ex. lowercase alphabetical, uppercase alphabetical, numerical, and special symbols) to assemble the character set then raised to the power of the length of the password, then the log2 computed. This will make it easier to modify later as we will not need to recalcuate the entropy.
 
-- File_Analysis/outliers.py will generate 2 TSVs based on the input TSV. It has a hard coded threshold for mean + 6 \* std_dev for the hashesorg2019.tsv file. It will separate those with entropy above that limit and those below into their respective TSV file.
+TODO: Add diagram of different groups, and example.
 
-- File_Analysis/kde.py (currently doesn't work because of memory constraints) will generate a KDE of the entropy for the passwords.
+- Gotta do basic_process before you can sort because there isn't an entropy calculated yet. Unix sort was used to sort the hashesorg2019.tsv "sort -t$'\t' -k2,2n hashesorg2019.tsv > sorted_hashesorg2019.tsv"
 
-- Unix sort was used to sort the 6sig_hashesorg2019.tsv "sort -t$'\t' -k2,2n 6sig_hashesorg2019.tsv > sorted_6sig_hashesorg2019.tsv"
+- File_Analysis/outliers.py will generate 2 TSVs based on the input TSV. It can be hard coded threshold for limit of mean + 6 \* std_dev (383 entropy) for the hashesorg2019.tsv file. It will separate those with entropy above that limit and those below into their respective TSV file. For the purpose of not removing passwords, this research will not remove any outliers. head -n -1 sorted_hashesorg2019.tsv > temp && mv temp sorted_hashesorg2019.tsv
 
-- Unix split was used to split the dataset into files of increasing entropy (due to the fact it was already sorted). These will be the sets with which to train.
+- File_Analysis/plot.py (currently doesn't work because of memory constraints) will generate a KDE or Histogram of the entropy for the passwords.
+
+- Unix split was used to split the dataset into files of increasing entropy (due to the fact it was already sorted). These will be the sets with which to train. ("split -l 25817639 sorted hashesorg2019.tsv entropy_bin") wc -l sorted_hashesorg2019.tsv
 
 2. Determine how you want to test effectiveness. For example, you can test in the same entropy bin by using a test and training set, or aim for the entropy set above the one you train with (therefore allowing you to use 100% of the entropy bin below your target set)
 

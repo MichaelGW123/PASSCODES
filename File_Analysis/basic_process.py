@@ -49,7 +49,7 @@ def process_file(input_file, output_file):
 
                 if all(char in string.printable[0:-6] for char in line):
                     entropy = calculate_entropy(line)
-                    if entropy > 0:
+                    if 0 < entropy:
                         valid_lines.append((line, entropy))
                         usable_lines += 1
 
@@ -84,7 +84,7 @@ def process_file(input_file, output_file):
 
 
 if __name__ == "__main__":
-    input_file = "/home/morpheus/Research/DeepLearningEntropy/Source_Files/hashesorg2019"
-    output_file = "/home/morpheus/Research/DeepLearningEntropy/Source_Files/hashesorg2019.tsv"
+    input_file = "/home/morpheus/PASSCODES/Source_Files/hashesorg2019"
+    output_file = "/home/morpheus/PASSCODES/Source_Files/hashesorg2019.tsv"
 
     process_file(input_file, output_file)
