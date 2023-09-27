@@ -5,37 +5,42 @@
 
 
 ########## Part 0 - Importing the libraries ###########
-import matplotlib.pyplot as plt
+# Part 1 - Data Preprocessing
+
+# Importing the libraries
 import os
-import time
 import tensorflow as tf
+from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.keras.callbacks import EarlyStopping
+import matplotlib.pyplot as plt
+import time
 
-
-########## Part 1 - Data Preprocessing ##########
-specific_file = 'entropy_bin_00'
+# Imported training set
+specific_file = 'entropy_bin_00_output'
 
 training = True
-save_new_weight = False
-model_ver = 1
+modelVer = 1
 EPOCHS = 1
+save_new_weight = False
 
 # Variable for array of starter words (Increasing reduces time but increases computational load)
 number_of_lines = 2000
-BATCH_SIZE = 1024
-# Buffer size to shuffle the dataset
-# (TF data is designed to work with possibly infinite sequences,
-# so it doesn't attempt to shuffle the entire sequence in memory. Instead,
-# it maintains a buffer in which it shuffles elements).
-BUFFER_SIZE = 10000
+
+# The embedding dimension
+embedding_dim = 256
+
+# Number of RNN units
+rnn_units = 512
+if (modelVer == 1):
+    rnn_units = 1024
 
 start = time.time()
-
-current_dir = os.getcwd()  # Assemble the Path
-file_end = '/Source_Files/split_data/'+specific_file+'.tsv'
+# Set the file name for opening the file
+current_dir = os.getcwd()
+file_end = '/Source_Files/text_data/'+specific_file+'.txt'
 file_name = current_dir + file_end
 # Checkpoint to load if saving
-check_to_load = "./training_checkpoints/{model_ver}_Hidden_Layers/{specific_file}_ckpt_{EPOCHS}"
+check_to_load = "./training_checkpoints/{modelVer}_Hidden_Layers/ckpt_{rnn_units}_{EPOCHS}"
 
 if (not os.path.exists(file_name)):
     print("File Name specified does not exist.")
@@ -45,28 +50,21 @@ if (not os.path.exists(check_to_load) and save_new_weight):
     exit()
 
 # Open the file to grab the first 'number_of_lines' you decided to populate the model with when generating
-# Index of the column you want to extract (0 for the first column)
-column_index = 0
-starting_word_index = 0
-
-# Initialize a list to store the values from the specified column
+file_grab_start_words = open(file_name, 'r')
 starting_words = []
-text = []
+for i in range(number_of_lines):
+    line = file_grab_start_words.readline()
+    starting_words.append(line.strip())
+# count the rest of the lines in the file
+nonempty_lines = [line.strip("\n")
+                  for line in file_grab_start_words if line != "\n"]
+line_count = len(nonempty_lines)+number_of_lines
+file_grab_start_words.close()
+print(f'Number of lines: {line_count} lines')
 
-# Read the .tsv file and extract the specified column
-with open(file_name, 'r', encoding='utf-8') as tsv_file:
-    for line in tsv_file:
-        # Split the line into columns based on tab ('\t') separator
-        columns = line.strip().split('\t')
-
-        # Check if the specified column index is valid for the current line
-        if column_index < len(columns):
-            text.append(columns[column_index])
-        if starting_word_index < number_of_lines:
-            # Capture the first 2000 lines
-            starting_words.append(columns[column_index])
-            starting_word_index += 1
-
+text = open(file_name, 'rb').read().decode(encoding='utf-8')
+length = len(text)
+print(f'Length of text: {length} characters')
 end = time.time()
 importing_data_time = end - start
 
@@ -82,17 +80,17 @@ else:
     device = '/CPU:0'
 
 with tf.device(device):
-    # This is where we create the ID to character connection and vice versa
-    ids_from_chars = tf.keras.layers.StringLookup(
+    # preprocessing.StringLookup converts each character into a numeric ID
+    ids_from_chars = preprocessing.StringLookup(
         vocabulary=list(vocab), mask_token=None)
-    chars_from_ids = tf.keras.layers.StringLookup(
+    chars_from_ids = tf.keras.layers.experimental.preprocessing.StringLookup(
         vocabulary=ids_from_chars.get_vocabulary(), invert=True, mask_token=None)
 
     # For each input sequence the corresponding target contains the same length of text but instead of the following chars
     all_ids = ids_from_chars(tf.strings.unicode_split(text, 'UTF-8'))
     ids_dataset = tf.data.Dataset.from_tensor_slices(all_ids)
 
-    seq_length = 13
+    seq_length = 7
     examples_per_epoch = len(text)//(seq_length+1)
 
     sequences = ids_dataset.batch(seq_length+1, drop_remainder=True)
@@ -104,8 +102,19 @@ with tf.device(device):
 
     dataset = sequences.map(split_input_target)
 
+    # Create Training Batches
+    # Batch size
+    BATCH_SIZE = 1024
+
+    # Buffer size to shuffle the dataset
+    # (TF data is designed to work with possibly infinite sequences,
+    # so it doesn't attempt to shuffle the entire sequence in memory. Instead,
+    # it maintains a buffer in which it shuffles elements).
+    BUFFER_SIZE = 10000
+
     dataset = (dataset.shuffle(BUFFER_SIZE).batch(
         BATCH_SIZE, drop_remainder=True).prefetch(tf.data.experimental.AUTOTUNE))
+
 
 end = time.time()
 vectorizing_data_time = end - start
@@ -115,12 +124,6 @@ print(vectorizing_data_time)
 
 # Length of the vocabulary in chars
 vocab_size = len(vocab)
-
-# The embedding dimension
-embedding_dim = 256
-
-# Number of RNN units
-rnn_units = 1024
 
 # Creating the model, adding the necessary layers
 
@@ -147,17 +150,88 @@ class MyModelOne(tf.keras.Model):
             return x
 
 
+class MyModelTwo(tf.keras.Model):
+    def __init__(self, vocab_size, embedding_dim, rnn_units):
+        super().__init__(self)
+        self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
+        self.gru1 = tf.keras.layers.GRU(
+            rnn_units, return_sequences=True, return_state=True)
+        self.gru2 = tf.keras.layers.GRU(
+            rnn_units, return_sequences=True, return_state=True)
+        self.dense = tf.keras.layers.Dense(vocab_size)
+
+    def call(self, inputs, states=None, return_state=False, training=False):
+        x = inputs
+        x = self.embedding(x, training=training)
+        flag = 0
+        if states is None:
+            flag = 1
+            states = self.gru1.get_initial_state(x)
+        x, states = self.gru1(x, initial_state=states, training=training)
+        if flag == 1:
+            states = self.gru2.get_initial_state(x)
+        x, states = self.gru2(x, initial_state=states, training=training)
+        x = self.dense(x, training=training)
+
+        if return_state:
+            return x, states
+        else:
+            return x
+
+
+class MyModelThree(tf.keras.Model):
+    def __init__(self, vocab_size, embedding_dim, rnn_units):
+        super().__init__(self)
+        self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
+        self.gru1 = tf.keras.layers.GRU(
+            rnn_units, return_sequences=True, return_state=True)
+        self.gru2 = tf.keras.layers.GRU(
+            rnn_units, return_sequences=True, return_state=True)
+        self.gru3 = tf.keras.layers.GRU(
+            rnn_units, return_sequences=True, return_state=True)
+        self.dense = tf.keras.layers.Dense(vocab_size)
+
+    def call(self, inputs, states=None, return_state=False, training=False):
+        x = inputs
+        x = self.embedding(x, training=training)
+        flag = 0
+        if states is None:
+            flag = 1
+            states = self.gru1.get_initial_state(x)
+        x, states = self.gru1(x, initial_state=states, training=training)
+        if flag == 1:
+            flag = 2
+            states = self.gru2.get_initial_state(x)
+        x, states = self.gru2(x, initial_state=states, training=training)
+        if flag == 2:
+            states = self.gru3.get_initial_state(x)
+        x, states = self.gru3(x, initial_state=states, training=training)
+        x = self.dense(x, training=training)
+
+        if return_state:
+            return x, states
+        else:
+            return x
+
+
 model = MyModelOne(
-    vocab_size=vocab_size,
+    vocab_size=len(ids_from_chars.get_vocabulary()),
     embedding_dim=embedding_dim,
     rnn_units=rnn_units)
 
-print(dataset)
+if (modelVer == 2):
+    model = MyModelTwo(
+        vocab_size=len(ids_from_chars.get_vocabulary()),
+        embedding_dim=embedding_dim,
+        rnn_units=rnn_units)
+elif (modelVer == 3):
+    model = MyModelThree(
+        vocab_size=len(ids_from_chars.get_vocabulary()),
+        embedding_dim=embedding_dim,
+        rnn_units=rnn_units)
 
 for input_example_batch, target_example_batch in dataset.take(1):
     example_batch_predictions = model(input_example_batch)
-    print(example_batch_predictions.shape,
-          "# (batch_size, sequence_length, vocab_size)")
 
 model.summary()
 
@@ -172,17 +246,16 @@ print("Mean loss:        ", mean_loss)
 model.compile(optimizer='adam', loss=loss)
 
 # Directory where the checkpoints will be saved
-checkpoint_dir = './training_checkpoints/{model_ver}_Hidden_Layers/'
+checkpoint_dir = f'./training_checkpoints/{modelVer}_Hidden_Layers/ckpt_{rnn_units}_'
 # Name of the checkpoint files
-checkpoint_prefix = os.path.join(
-    checkpoint_dir, "{specific_file}_ckpt_{epoch}")
+checkpoint_prefix = os.path.join(checkpoint_dir, "{epoch}")
 
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_prefix,
     save_weights_only=True)
 
 # Path of file for the checkpoints
-checkpoint_path = f'./modelweights/{model_ver}_Hidden_Layers/{specific_file}/model({rnn_units})({EPOCHS})-{specific_file}'
+checkpoint_path = f'./model_weights/{modelVer}_Hidden_Layers/{specific_file}/model({rnn_units})({EPOCHS})-{specific_file}'
 
 # If training, fit the model, save the weights, then save the runtime statistics
 if (training and not save_new_weight):
@@ -191,7 +264,7 @@ if (training and not save_new_weight):
     history = model.fit(dataset, epochs=EPOCHS, callbacks=[
                         es, checkpoint_callback])
     early_stop = len(history.history['loss'])
-    checkpoint_path = f'./modelweights/{model_ver}_Hidden_Layers/{specific_file}/model({rnn_units})({early_stop})-{specific_file}'
+    checkpoint_path = f'./model_weights/Version {modelVer}/{specific_file}/model({rnn_units}by{rnn_units})({early_stop})-{specific_file}'
     model.save_weights(checkpoint_path)
 
     # Review models loss and training for evaluation
@@ -202,7 +275,7 @@ if (training and not save_new_weight):
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.savefig(
-        f'Training_Graphs/{model_ver}_Hidden_Layers/{specific_file}_{rnn_units}_training.png')
+        f'Training_Graphs/{modelVer}_Hidden_Layers/{specific_file}_{rnn_units}_training.png')
     end = time.time()
     total = end - start
     line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nLayers: {modelVer}\n Neurons: {rnn_units}\nTotal Run Time: {total} seconds\nLoss: {history.history['loss'][-4:]}\n\n"
@@ -212,7 +285,7 @@ if (training and not save_new_weight):
 else:  # If the model is not training
     if (save_new_weight):  # If we are saving a weight from the checkpoint, simply load, save, exit
         model.load_weights(
-            f'./training_checkpoints/{model_ver}_Hidden_Layers/{specific_file}_ckpt_{EPOCHS}').expect_partial()
+            f'./training_checkpoints/{modelVer}_Hidden_Layers/ckpt_{rnn_units}_{EPOCHS}').expect_partial()
         model.save_weights(checkpoint_path)
         exit()
 
@@ -280,7 +353,7 @@ else:  # If the model is not training
     number_of_guesses = int(length*saturation/number_of_lines)
     partialGuess = int(number_of_guesses/100)
     print(number_of_guesses)
-    output_path = f"./Generated_Files/{model_ver}_Hidden_Layers/PRED{specific_file}-{saturation*100}(RNN).txt"
+    output_path = f"./Generated_Files/{modelVer}_Hidden_Layers/PRED{specific_file}-{saturation*100}(RNN).txt"
     f = open(output_path, "a", encoding='utf-8')
     for n in range(number_of_guesses):
         next_char, states = one_step_model.generate_one_step(
