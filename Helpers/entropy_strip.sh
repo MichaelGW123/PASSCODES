@@ -12,7 +12,7 @@ process_tsv_file() {
     local base_name
     base_name="$(basename "$tsv_file" .tsv)"
     output_dir="/home/morpheus/PASSCODES/Source_Files/text_data"
-    local output_file="$output_dir/${base_name}_output.txt"
+    local output_file="$output_dir/${base_name}.txt"
     > "$output_file"
     cut -f 1 "$tsv_file" > "$output_file"
 }

@@ -17,6 +17,8 @@ for main_dir in "${main_directories[@]}"; do
     create_directory "$main_dir"
 
     if [[ "$main_dir" == "Source_Files" ]]; then
+        create_directory "entropy_data"
+        create_directory "text_data"
         continue  # Skip subdirectories for "Source_Files"
     fi
 
