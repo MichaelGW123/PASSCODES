@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project explores the generation of passwords using Recurrent Neural Networks (RNNs) and Markov models, with the aim of comparing their potential for password cracking. The goal is to analyze the models' ability to generate realistic passwords and effectively leverage statistically recognizable patterns in lower-entropy passwords to compromise higher-entropy passwords.
+This project explores the generation of passwords using Recurrent Neural Network (RNN) models, with the aim of comparing their potential for password cracking. The goal is to analyze the models' ability to generate realistic passwords and effectively leverage statistically recognizable patterns in lower-entropy passwords to compromise higher-entropy passwords.
 
 ## Inspiration
 
