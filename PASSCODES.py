@@ -246,9 +246,10 @@ print("Mean loss:        ", mean_loss)
 model.compile(optimizer='adam', loss=loss)
 
 # Directory where the checkpoints will be saved
-checkpoint_dir = f'./training_checkpoints/{modelVer}_Hidden_Layers/ckpt_{rnn_units}_'
+checkpoint_dir = f'./training_checkpoints/{modelVer}_Hidden_Layers/{rnn_units}/'
 # Name of the checkpoint files
-checkpoint_prefix = os.path.join(checkpoint_dir, "{epoch}")
+checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt_{epoch}")
+print(checkpoint_prefix)
 
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_prefix,
@@ -279,7 +280,7 @@ if (training and not save_new_weight):
     end = time.time()
     total = end - start
     line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nLayers: {modelVer}\n Neurons: {rnn_units}\nTotal Run Time: {total} seconds\nLoss: {history.history['loss'][-4:]}\n\n"
-    record = open('./runtime.txt', "a", encoding='utf-8')
+    record = open('./training_checkpoints/runtime.txt', "a", encoding='utf-8')
     record.write(line)
     record.close()
 else:  # If the model is not training
@@ -374,9 +375,12 @@ else:  # If the model is not training
     total = end - start
     line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nGenerating Data: {number_of_guesses} \nGenerating Time: {total} seconds\n\n"
 
-    record = open('./runtime.txt', "a", encoding='utf-8')
+    record = open('./Generated_Files/runtime.txt', "a", encoding='utf-8')
     record.write(line)
     record.close()
     print(line)
 
-# os.system("python Helpers/shutdown_comp.py")
+# This executes the python script so that whether you want to shutdown after a run
+# completes can be determined at any point and doesn't have to be fixed to whatever
+# was decided at execution.
+os.system("python Helpers/shutdown_comp.py")
