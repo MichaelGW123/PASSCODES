@@ -6,7 +6,17 @@ This project explores the generation of passwords using Recurrent Neural Network
 
 ## Inspiration
 
-(Discuss original inspiration)
+Password cracking has been a topic of some facination. Some of the most notable hacks were not done through brute force but rather an element of Social Engineering. Passwords hold a very unique position where they must be difficult to guess but easy to remember, which seem to be opposites. One method of password cracking, the dictionary attack, relies on guessing commonly used passwords. Then there is rule based attacks, where a website may require certain rules to be followed when composing a password (ie. "Your password must have at least 8 characters, one capital, and a number"). This can behave in an opposite manner to it's intended purpose where now attackers know a basic rule strucutre your password must follow.
+
+My thinking was what if we could combine the two with Deep Learning. What if using a list of commonly used passwords we created 'rules'. Not real rules that have to be followed, but tendencies that people have in their passwords.
+
+```bash
+Michael8! Joe5$ Peter9( Bartholomew3@
+```
+
+All of these follow the same pattern, a name, number, and special character. However, some of these as a password are simple to crack (like Joe5$ with a password entropy of 32.85) whereas others are a bit tougher (like Bartholomew3@ with a password entropy of 85.41).
+
+Now using a RNN trained on these passwords and generating passwords, how many of those can we find in a category of entropy higher.
 
 ## Features
 
@@ -73,34 +83,34 @@ Right now this simply is used to generate files and then we compare that, but th
 
 1. Using the training set, seperate it into different entropies of any desired granularity.
 
-- This step starts off with using the 'hashesorg2019' file. File_Analysis/basic_process.py will create a tsv, with each row containing [password (column 0), entropy (column 1)]. Entropy will be calculated by considering the unique pools of characters pulled from (ex. lowercase alphabetical, uppercase alphabetical, numerical, and special symbols) to assemble the character set then raised to the power of the length of the password, then the log2 computed. This will make it easier to modify later as we will not need to recalcuate the entropy.
+   - This step starts off with using the 'hashesorg2019' file. File_Analysis/basic_process.py will create a tsv, with each row containing [password (column 0), entropy (column 1)]. Entropy will be calculated by considering the unique pools of characters pulled from (ex. lowercase alphabetical, uppercase alphabetical, numerical, and special symbols) to assemble the character set then raised to the power of the length of the password, then the log2 computed. This will make it easier to modify later as we will not need to recalcuate the entropy.
 
-  ```bash
-  File_Analysis/basic_process.py
-  ```
+     ```bash
+     File_Analysis/basic_process.py
+     ```
 
-TODO: Add diagram of different groups, and example.
+     TODO: Add diagram of different groups, and example.
 
-- After you have done File_Analysis/basic_process.py you can sort because there is an entropy calculated. Unix sort was used to sort the hashesorg2019.tsv
+   - After you have done File_Analysis/basic_process.py you can sort because there is an entropy calculated. Unix sort was used to sort the hashesorg2019.tsv
 
-  ```bash
-  sort -t$'\t' -k2,2n hashesorg2019.tsv > sorted_hashesorg2019.tsv
-  ```
+     ```bash
+     sort -t$'\t' -k2,2n hashesorg2019.tsv > sorted_hashesorg2019.tsv
+     ```
 
-- (OPTIONAL) File_Analysis/outliers.py will generate 2 TSVs based on the input TSV. It can be hard coded threshold for limit of mean + 6 \* std_dev (383 entropy) for the hashesorg2019.tsv file. It will separate those with entropy above that limit and those below into their respective TSV file. For the purpose of not removing passwords, this research will not remove any outliers except for the very largest password because it was so uniquely on it's own in its entropy value.
+   - (OPTIONAL) File_Analysis/outliers.py will generate 2 TSVs based on the input TSV. It can be hard coded threshold for limit of mean + 6 \* std_dev (383 entropy) for the hashesorg2019.tsv file. It will separate those with entropy above that limit and those below into their respective TSV file. For the purpose of not removing passwords, this research will not remove any outliers except for the very largest password because it was so uniquely on it's own in its entropy value.
 
-  ```bash
-  head -n -1 sorted_hashesorg2019.tsv > temp && mv temp sorted_hashesorg2019.tsv
-  ```
+     ```bash
+     head -n -1 sorted_hashesorg2019.tsv > temp && mv temp sorted_hashesorg2019.tsv
+     ```
 
-- File_Analysis/plot.py (currently doesn't work because of memory constraints) will generate a KDE or Histogram of the entropy for the passwords to give a general idea of how the password entropy is distributed.
+   - File_Analysis/plot.py (currently doesn't work because of memory constraints) will generate a KDE or Histogram of the entropy for the passwords to give a general idea of how the password entropy is distributed.
 
-- Unix split was used to split the dataset into files of increasing entropy (due to the fact it was already sorted). These will be the sets with which to train. In this case, 'wc -l' was used to get the number of lines in the file, then calculate a number of files which divides that number without any remainder.
+   - Unix split was used to split the dataset into files of increasing entropy (due to the fact it was already sorted). These will be the sets with which to train. In this case, 'wc -l' was used to get the number of lines in the file, then calculate a number of files which divides that number without any remainder.
 
-  ```bash
-  wc -l sorted_hashesorg2019.tsv
-  split -l 25817639 sorted hashesorg2019.tsv entropy_data/entropy_bin
-  ```
+     ```bash
+     wc -l sorted_hashesorg2019.tsv
+     split -l 25817639 sorted hashesorg2019.tsv entropy_data/entropy_bin
+     ```
 
 2. Determine how you want to test effectiveness. For example, you can test in the same entropy bin by using a test and training set, or aim for the entropy set above the one you train with (therefore allowing you to use 100% of the entropy bin below your target set)
 
@@ -113,6 +123,10 @@ TODO: Add diagram of different groups, and example.
    ```
 
 4. Generate a number of passwords with the RNN model.
+
+   ```bash
+   python PASSCODES.py entropy_bin_00 generate
+   ```
 
 5. See what percent of passwords were a match with you intended target set.
 
