@@ -65,6 +65,8 @@ print(f'Number of lines: {line_count} lines')
 text = open(file_name, 'rb').read().decode(encoding='utf-8')
 length = len(text)
 print(f'Length of text: {length} characters')
+average_length = length/line_count
+print(f'Average Length of each line: {average_length}')
 end = time.time()
 importing_data_time = end - start
 
@@ -73,47 +75,43 @@ vocab = sorted(set(text))
 print(f'{len(vocab)} unique characters')
 
 # Vectorize the Text
-# # Use GPU if it's available
-if tf.config.list_physical_devices('GPU'):
-    device = '/GPU:0'
-else:
-    device = '/CPU:0'
 
-with tf.device(device):
-    # preprocessing.StringLookup converts each character into a numeric ID
-    ids_from_chars = preprocessing.StringLookup(
-        vocabulary=list(vocab), mask_token=None)
-    chars_from_ids = tf.keras.layers.experimental.preprocessing.StringLookup(
-        vocabulary=ids_from_chars.get_vocabulary(), invert=True, mask_token=None)
+# preprocessing.StringLookup converts each character into a numeric ID
+ids_from_chars = preprocessing.StringLookup(
+    vocabulary=list(vocab), mask_token=None)
+chars_from_ids = tf.keras.layers.experimental.preprocessing.StringLookup(
+    vocabulary=ids_from_chars.get_vocabulary(), invert=True, mask_token=None)
 
-    # For each input sequence the corresponding target contains the same length of text but instead of the following chars
-    all_ids = ids_from_chars(tf.strings.unicode_split(text, 'UTF-8'))
-    ids_dataset = tf.data.Dataset.from_tensor_slices(all_ids)
+# For each input sequence the corresponding target contains the same length of text but it contains the following chars
+all_ids = ids_from_chars(tf.strings.unicode_split(text, 'UTF-8'))
+ids_dataset = tf.data.Dataset.from_tensor_slices(all_ids)
 
-    seq_length = 7
-    examples_per_epoch = len(text)//(seq_length+1)
+seq_length = round(average_length)
+examples_per_epoch = len(text)//(seq_length+1)
 
-    sequences = ids_dataset.batch(seq_length+1, drop_remainder=True)
+sequences = ids_dataset.batch(seq_length+1, drop_remainder=True)
 
-    def split_input_target(sequence):
-        input_text = sequence[:-1]
-        target_text = sequence[1:]
-        return input_text, target_text
 
-    dataset = sequences.map(split_input_target)
+def split_input_target(sequence):
+    input_text = sequence[:-1]
+    target_text = sequence[1:]
+    return input_text, target_text
 
-    # Create Training Batches
-    # Batch size
-    BATCH_SIZE = 1024
 
-    # Buffer size to shuffle the dataset
-    # (TF data is designed to work with possibly infinite sequences,
-    # so it doesn't attempt to shuffle the entire sequence in memory. Instead,
-    # it maintains a buffer in which it shuffles elements).
-    BUFFER_SIZE = 10000
+dataset = sequences.map(split_input_target)
 
-    dataset = (dataset.shuffle(BUFFER_SIZE).batch(
-        BATCH_SIZE, drop_remainder=True).prefetch(tf.data.experimental.AUTOTUNE))
+# Create Training Batches
+# Batch size
+BATCH_SIZE = 1024
+
+# Buffer size to shuffle the dataset
+# (TF data is designed to work with possibly infinite sequences,
+# so it doesn't attempt to shuffle the entire sequence in memory. Instead,
+# it maintains a buffer in which it shuffles elements).
+BUFFER_SIZE = 10000
+
+dataset = (dataset.shuffle(BUFFER_SIZE).batch(
+    BATCH_SIZE, drop_remainder=True).prefetch(tf.data.experimental.AUTOTUNE))
 
 
 end = time.time()
@@ -128,20 +126,27 @@ vocab_size = len(vocab)
 # Creating the model, adding the necessary layers
 
 
-class MyModelOne(tf.keras.Model):
-    def __init__(self, vocab_size, embedding_dim, rnn_units):
+class MyModel(tf.keras.Model):
+    def __init__(self, vocab_size, embedding_dim, rnn_units, num_gru_layers=1):
         super().__init__(self)
         self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
-        self.gru = tf.keras.layers.GRU(
-            rnn_units, return_sequences=True, return_state=True)
+        self.gru_layers = []
+        for _ in range(num_gru_layers):
+            self.gru_layers.append(tf.keras.layers.GRU(
+                rnn_units, return_sequences=True, return_state=True))
         self.dense = tf.keras.layers.Dense(vocab_size)
 
     def call(self, inputs, states=None, return_state=False, training=False):
         x = inputs
         x = self.embedding(x, training=training)
+
         if states is None:
-            states = self.gru.get_initial_state(x)
-        x, states = self.gru(x, initial_state=states, training=training)
+            states = [gru.get_initial_state(x) for gru in self.gru_layers]
+
+        for gru, state in zip(self.gru_layers, states):
+            x, state = gru(x, initial_state=state, training=training)
+            states.append(state)
+
         x = self.dense(x, training=training)
 
         if return_state:
@@ -150,85 +155,13 @@ class MyModelOne(tf.keras.Model):
             return x
 
 
-class MyModelTwo(tf.keras.Model):
-    def __init__(self, vocab_size, embedding_dim, rnn_units):
-        super().__init__(self)
-        self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
-        self.gru1 = tf.keras.layers.GRU(
-            rnn_units, return_sequences=True, return_state=True)
-        self.gru2 = tf.keras.layers.GRU(
-            rnn_units, return_sequences=True, return_state=True)
-        self.dense = tf.keras.layers.Dense(vocab_size)
-
-    def call(self, inputs, states=None, return_state=False, training=False):
-        x = inputs
-        x = self.embedding(x, training=training)
-        flag = 0
-        if states is None:
-            flag = 1
-            states = self.gru1.get_initial_state(x)
-        x, states = self.gru1(x, initial_state=states, training=training)
-        if flag == 1:
-            states = self.gru2.get_initial_state(x)
-        x, states = self.gru2(x, initial_state=states, training=training)
-        x = self.dense(x, training=training)
-
-        if return_state:
-            return x, states
-        else:
-            return x
-
-
-class MyModelThree(tf.keras.Model):
-    def __init__(self, vocab_size, embedding_dim, rnn_units):
-        super().__init__(self)
-        self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
-        self.gru1 = tf.keras.layers.GRU(
-            rnn_units, return_sequences=True, return_state=True)
-        self.gru2 = tf.keras.layers.GRU(
-            rnn_units, return_sequences=True, return_state=True)
-        self.gru3 = tf.keras.layers.GRU(
-            rnn_units, return_sequences=True, return_state=True)
-        self.dense = tf.keras.layers.Dense(vocab_size)
-
-    def call(self, inputs, states=None, return_state=False, training=False):
-        x = inputs
-        x = self.embedding(x, training=training)
-        flag = 0
-        if states is None:
-            flag = 1
-            states = self.gru1.get_initial_state(x)
-        x, states = self.gru1(x, initial_state=states, training=training)
-        if flag == 1:
-            flag = 2
-            states = self.gru2.get_initial_state(x)
-        x, states = self.gru2(x, initial_state=states, training=training)
-        if flag == 2:
-            states = self.gru3.get_initial_state(x)
-        x, states = self.gru3(x, initial_state=states, training=training)
-        x = self.dense(x, training=training)
-
-        if return_state:
-            return x, states
-        else:
-            return x
-
-
-model = MyModelOne(
+# Usage
+model = MyModel(
     vocab_size=len(ids_from_chars.get_vocabulary()),
     embedding_dim=embedding_dim,
-    rnn_units=rnn_units)
+    rnn_units=rnn_units,
+    num_gru_layers=modelVer)
 
-if (modelVer == 2):
-    model = MyModelTwo(
-        vocab_size=len(ids_from_chars.get_vocabulary()),
-        embedding_dim=embedding_dim,
-        rnn_units=rnn_units)
-elif (modelVer == 3):
-    model = MyModelThree(
-        vocab_size=len(ids_from_chars.get_vocabulary()),
-        embedding_dim=embedding_dim,
-        rnn_units=rnn_units)
 
 for input_example_batch, target_example_batch in dataset.take(1):
     example_batch_predictions = model(input_example_batch)
