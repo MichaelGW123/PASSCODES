@@ -11,7 +11,6 @@ create_directory() {
 
 # Main script
 main_directories=("Generated_Files" "model_weights" "Source_Files" "training_checkpoints" "Training_Graphs")
-subdirectories=("1_Hidden_Layers" "2_Hidden_Layers" "3_Hidden_Layers")
 
 for main_dir in "${main_directories[@]}"; do
     create_directory "$main_dir"
@@ -19,14 +18,11 @@ for main_dir in "${main_directories[@]}"; do
     if [[ "$main_dir" == "Source_Files" ]]; then
         create_directory "entropy_data"
         create_directory "text_data"
-        continue  # Skip subdirectories for "Source_Files"
+        continue 
     fi
-
-    cd "$main_dir" || exit
-
-    for subdir in "${subdirectories[@]}"; do
-        create_directory "$subdir"
-    done
+    if [[ "$main_dir" == "training_checkpoints" ]]; then
+        continue 
+    fi
 
     cd .. || exit
 done

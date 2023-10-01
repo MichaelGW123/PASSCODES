@@ -19,8 +19,9 @@ import time
 specific_file = 'entropy_bin_00_output'
 
 training = True
-modelVer = 1
-EPOCHS = 1
+generating = True
+modelVer = 5
+EPOCHS = 10
 save_new_weight = False
 
 # Variable for array of starter words (Increasing reduces time but increases computational load)
@@ -192,13 +193,13 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 checkpoint_path = f'./model_weights/{modelVer}_Hidden_Layers/{specific_file}/model({rnn_units})({EPOCHS})-{specific_file}'
 
 # If training, fit the model, save the weights, then save the runtime statistics
-if (training and not save_new_weight):
+if (training):
     es = EarlyStopping(monitor='loss', min_delta=0.0015,
                        mode='min', verbose=1, patience=3)
     history = model.fit(dataset, epochs=EPOCHS, callbacks=[
                         es, checkpoint_callback])
     early_stop = len(history.history['loss'])
-    checkpoint_path = f'./model_weights/Version {modelVer}/{specific_file}/model({rnn_units}by{rnn_units})({early_stop})-{specific_file}'
+    checkpoint_path = f'./model_weights/{modelVer}_Hidden_Layers/{specific_file}/model({rnn_units})({early_stop})-{specific_file}'
     model.save_weights(checkpoint_path)
 
     # Review models loss and training for evaluation
@@ -208,20 +209,22 @@ if (training and not save_new_weight):
     plt.title('model loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')
+    graph_directory_path = f'Training_Graphs/{modelVer}_Hidden_Layers/'
+    if not os.path.exists(graph_directory_path):
+        os.makedirs(graph_directory_path)
     plt.savefig(
-        f'Training_Graphs/{modelVer}_Hidden_Layers/{specific_file}_{rnn_units}_training.png')
+        f'{graph_directory_path}{specific_file}_{rnn_units}_training.png')
     end = time.time()
     total = end - start
     line = f"File: {specific_file} \nImporting Data Time: {importing_data_time} \nVectorizing Data Time: {vectorizing_data_time} \nLayers: {modelVer}\n Neurons: {rnn_units}\nTotal Run Time: {total} seconds\nLoss: {history.history['loss'][-4:]}\n\n"
     record = open('./training_checkpoints/runtime.txt', "a", encoding='utf-8')
     record.write(line)
     record.close()
-else:  # If the model is not training
+if (generating):
     if (save_new_weight):  # If we are saving a weight from the checkpoint, simply load, save, exit
         model.load_weights(
             f'./training_checkpoints/{modelVer}_Hidden_Layers/ckpt_{rnn_units}_{EPOCHS}').expect_partial()
         model.save_weights(checkpoint_path)
-        exit()
 
     # If we are not saving a new weight then the model is loaded and good to generate
     model.load_weights(checkpoint_path)
@@ -287,13 +290,16 @@ else:  # If the model is not training
     number_of_guesses = int(length*saturation/number_of_lines)
     partialGuess = int(number_of_guesses/100)
     print(number_of_guesses)
-    output_path = f"./Generated_Files/{modelVer}_Hidden_Layers/PRED{specific_file}-{saturation*100}(RNN).txt"
+    out_directory_path = f'./Generated_Files/{modelVer}_Hidden_Layers/'
+    if not os.path.exists(out_directory_path):
+        os.makedirs(out_directory_path)
+    output_path = f'{out_directory_path}PRED{specific_file}-{saturation*100}(RNN).txt'
     f = open(output_path, "a", encoding='utf-8')
     for n in range(number_of_guesses):
         next_char, states = one_step_model.generate_one_step(
             next_char, states=states)
         result.append(next_char)
-        if (n % partialGuess == (partialGuess-1)):  # Helps keep track of progress
+        if (partialGuess != 0 and n % partialGuess == (partialGuess-1)):  # Helps keep track of progress
             # Joins the tensorflow objects into strings
             temp = tf.strings.join(result)
             # loops through the tf matrix to decode and write the strings to the output file
@@ -303,6 +309,12 @@ else:  # If the model is not training
             print(f'{n} completed')
             # clears the strings already written to the file, 'next_char' maintains the last character for predictions
             result.clear()
+        else:
+            temp = tf.strings.join(result)
+            for pred in range(number_of_lines):
+                output = temp[pred].numpy().decode('utf-8')
+                f.write(output+"\n")
+            print(f'{n} completed')
     f.close()
     end = time.time()
     total = end - start

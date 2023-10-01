@@ -1,7 +1,8 @@
 from pathlib import Path
-specificFile = 'words80to90'
-path = Path(__file__).parent / f'PRED{specificFile}-1000(RNN).txt'
-path2 = Path(__file__).parent / f'PRED{specificFile}-1000(RNN)(Clear).txt'
+model_ver = 5
+specificFile = 'entropy_bin_00_output'
+path = f'/home/morpheus/PASSCODES/Generated_Files/{model_ver}_Hidden_Layers/PRED{specificFile}-1000(RNN).txt'
+path2 = f'/home/morpheus/PASSCODES/Generated_Files/{model_ver}_Hidden_Layers/PRED{specificFile}-1000(RNN)_cleared.txt'
 
 with open(path) as infile, open(path2, 'w') as outfile:
     for line in infile:
